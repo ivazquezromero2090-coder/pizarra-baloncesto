@@ -104,8 +104,8 @@ function configurarArrastre() {
         e.preventDefault();
 
         const rect = court.getBoundingClientRect();
-        const clientX = e.touches ? e.touches.clientX : e.clientX;
-        const clientY = e.touches ? e.touches.clientY : e.clientY;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
 
         let xPercent = ((clientX - rect.left) / rect.width) * 100;
         let yPercent = ((clientY - rect.top) / rect.height) * 100;
