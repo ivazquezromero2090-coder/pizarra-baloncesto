@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pizarra Táctica de Baloncesto - MVP</title>
+    <style>
+        /* ==========================================
+           1. ESTILOS GENERALES Y DISEÑO ELÁSTICO
+           ========================================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a; /* Azul noche oscuro */
+            color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden; /* Evita scrolls incómodos en tablets */
+            padding: 10px;
+        }
+
+        header {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 1.5rem;
+            color: #38bdf8; /* Azul celeste brillante */
+        }
+
+        header p {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        /* ==========================================
+           2. LA CANCHA DE BALONCESTO (FIBA 28:15)
+           ========================================== */
+        .court-container {
+            width: 100%;
+            max-width: 950px; /* Tamaño máximo para ordenadores */
+            aspect-ratio: 28 / 15; /* Relación de aspecto oficial de la cancha */
+            position: relative;
+            background-color: #1e293b; /* Azul pizarra deportivo */
+            border: 4px solid #f8fafc;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            touch-action: none; /* BLOQUEA el scroll y zoom táctil en la zona de la cancha */
+        }
+
+        /* Líneas de juego mediante SVG transparente superpuesto */
+        .court-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Permite clickear a través de las líneas */
+        }
+
+        /* ==========================================
+           3. FICHAS TÁCTICAS (TOKENS)
+           ========================================== */
+        .token {
+            position: absolute;
+            width: 4.5%; /* Tamaño proporcional al ancho de la cancha */
+            aspect-ratio: 1 / 1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2vw; /* Texto elástico con la pantalla */
+            color: #ffffff;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            /* CENTRADO PERFECTO: El punto de anclaje de left/top será el centro de la ficha */
+            transform: translate(-50%, -50%); 
+            transition: transform 0.1s ease;
+            touch-action: none; /* Clave para drag fluido en tablets */
+        }
+
+        @media (min-width: 950px) {
+            .token { font-size: 12px; } /* Límite de tamaño de fuente en pantallas gigantes */
+        }
+
+        /* Fichas de Ataque (Azul Celeste) */
+        .token.attack {
+            background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
+            border: 2px solid #e0f2fe;
+        }
+
+        /* Fichas de Defensa (Rojo Coral) */
+        .token.defense {
+            background: radial-gradient(circle, #f87171 0%, #dc2626 100%);
+            border: 2px solid #fee2e2;
+        }
+
+        /* El Balón (Naranja - mismo tamaño de un jugador) */
+        .token.ball {
+            width: 4.5%; 
+            background: radial-gradient(circle, #f97316 0%, #ea580c 100%);
+            border: 1px solid #ffedd5;
+            z-index: 10; /* Siempre por encima de los jugadores */
+        }
+
+        /* Efecto visual al levantar la ficha */
+        .token:active {
+            cursor: grabbing;
+            transform: translate(-50%, -50%) scale(1.2); /* Agrandamos un poco bajo el dedo/ratón */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Pizarra Táctica de Baloncesto</h1>
+        <p>Arrastra los jugadores y el balón con el dedo o el ratón para planificar tu ataque (Fase 1)</p>
+    </header>
+
+    <!-- La Cancha Táctica -->
+    <div class="court-container" id="basketball-court">
+        
+        <!-- Líneas Oficiales FIBA representadas en un plano 280x150 -->
+        <svg class="court-lines" viewBox="0 0 280 150">
+            <!-- Línea de medio campo -->
+            <line x1="140" y1="0" x2="140" y2="150" stroke="#f8fafc" stroke-width="2"/>
+            <!-- Círculo central -->
+            <circle cx="140" cy="75" r="18" fill="none" stroke="#f8fafc" stroke-width="2"/>
+            <circle cx="140" cy="75" r="2" fill="#f8fafc"/>
+            
+            <!-- Área Izquierda (Zona) -->
+            <rect x="0" y="46" width="58" height="58" fill="none" stroke="#f8fafc" stroke-width="2"/>
+            <!-- Semicírculo de tiros libres izquierdo -->
+            <path d="M 58,57 A 18,18 0 0,1 58,93" fill="none" stroke="#f8fafc" stroke-width="2"/>
+            <!-- Línea de Tres Puntos Izquierda (FIBA) -->
+            <path d="M 0,15 L 29,15 A 62.5,62.5 0 0,1 29,135 L 0,135" fill="none" stroke="#f8fafc" stroke-width="2"/>
+            
+            <!-- Área Derecha (Zona) -->
+            <rect x="222" y="46" width="58" height="58" fill="none" stroke="#f8fafc" stroke-width="2"/>
+            <!-- Semicírculo de tiros libres derecho -->
+            <path d="M 222,57 A 18,18 0 0,0 222,93" fill="none" stroke="#f8fafc" stroke-width="2"/>
+            <!-- Línea de Tres Puntos Derecha (FIBA) -->
+            <path d="M 280,15 L 251,15 A 62.5,62.5 0 0,0 251,135 L 280,135" fill="none" stroke="#f8fafc" stroke-width="2"/>
+        </svg>
+
+        <!-- FICHAS DE JUGADORES (Posicionadas con porcentajes calculados de inicio) -->
+        <!-- Ataque (Azules) -->
+        <div class="token attack" style="left: 42%; top: 50%;" data-role="player">1</div>
+        <div class="token attack" style="left: 35%; top: 25%;" data-role="player">2</div>
+        <div class="token attack" style="left: 35%; top: 75%;" data-role="player">3</div>
+        <div class="token attack" style="left: 25%; top: 35%;" data-role="player">4</div>
+        <div class="token attack" style="left: 20%; top: 65%;" data-role="player">5</div>
+
+        <!-- Defensa (Rojos) -->
+        <div class="token defense" style="left: 32%; top: 50%;" data-role="player">1</div>
+        <div class="token defense" style="left: 25%; top: 22%;" data-role="player">2</div>
+        <div class="token defense" style="left: 25%; top: 78%;" data-role="player">3</div>
+        <div class="token defense" style="left: 15%; top: 40%;" data-role="player">4</div>
+        <div class="token defense" style="left: 10%; top: 60%;" data-role="player">5</div>
+
+        <!-- El Balón (Naranja, ubicado ligeramente delante del base) -->
+        <div class="token ball" style="left: 45%; top: 50%;" id="ball"></div>
+
+    </div>
+
+    <!-- ==========================================
+       4. LÓGICA DE PROGRAMACIÓN (JAVASCRIPT)
+       ========================================== -->
+    <script>
+        const court = document.getElementById('basketball-court');
+        let isDragging = false;
+        let activeToken = null;
+
+        // EVENTOS UNIFICADOS (Soportan tanto ratón de PC como toques en Tablet)
+        
+        // 1. INICIAR EL ARRASTRE
+        function startDrag(e) {
+            // Buscamos si lo que hemos clickeado es una ficha (token)
+            const token = e.target.closest('.token');
+            if (!token) return;
+
+            isDragging = true;
+            activeToken = token;
+            
+            // Traemos la ficha al frente de todas para que no pase "por debajo" de otras al moverla
+            court.appendChild(token); 
+        }
+
+        // 2. MOVER LA FICHA
+        function drag(e) {
+            if (!isDragging || !activeToken) return;
+
+            // Bloqueamos el scroll táctil del navegador mientras movemos la ficha
+            e.preventDefault();
+
+            // Obtenemos la posición física de la cancha en la pantalla actual
+            const rect = court.getBoundingClientRect();
+
+            // Capturamos la coordenada X e Y del cursor o del primer dedo táctil
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            // Convertimos la posición de píxeles a porcentaje relativo a la cancha
+            let xPercent = ((clientX - rect.left) / rect.width) * 100;
+            let yPercent = ((clientY - rect.top) / rect.height) * 100;
+
+            // (En la Fase 2 aplicaremos aquí el pseudocódigo de límites de cancha)
+            // Por ahora, actualizamos la posición directamente
+            activeToken.style.left = `${xPercent}%`;
+            activeToken.style.top = `${yPercent}%`;
+        }
+
+        // 3. FINALIZAR EL ARRASTRE
+        function stopDrag() {
+            isDragging = false;
+            activeToken = null;
+        }
+
+        // ASOCIACIÓN DE EVENTOS AL CONTENEDOR DE LA CANCHA
+        // Ratón (PC)
+        court.addEventListener('mousedown', startDrag);
+        window.addEventListener('mousemove', drag);
+        window.addEventListener('mouseup', stopDrag);
+
+        // Pantalla Táctil (Tablets, iPad, Android, iOS)
+        court.addEventListener('touchstart', startDrag, { passive: false });
+        window.addEventListener('touchmove', drag, { passive: false });
+        window.addEventListener('touchend', stopDrag);
+    </script>
+</body>
+</html>

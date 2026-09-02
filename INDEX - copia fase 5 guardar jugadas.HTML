@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pizarra Táctica de Baloncesto - MVP</title>
+    <style>
+        /* ==========================================
+           1. ESTILOS GENERALES Y DISEÑO ELÁSTICO
+           ========================================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a; /* Azul noche oscuro */
+            color: #f8fafc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden; /* Evita scrolls incómodos en tablets */
+            padding: 10px;
+            position: relative;
+        }
+
+        /* Indicador de conexión de red flotante */
+        .network-badge {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            background: #1e293b;
+            padding: 6px 12px;
+            border-radius: 9999px;
+            border: 1px solid #334155;
+            font-size: 0.78rem;
+            font-weight: 600;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.25);
+            z-index: 100;
+        }
+
+        .network-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .network-badge.online .network-dot {
+            background-color: #22c55e; /* Verde brillante */
+            box-shadow: 0 0 6px #22c55e;
+        }
+
+        .network-badge.offline .network-dot {
+            background-color: #ef4444; /* Rojo coral */
+            box-shadow: 0 0 6px #ef4444;
+        }
+
+        header {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 1.4rem;
+            color: #38bdf8; /* Azul celeste brillante */
+        }
+
+        header p {
+            font-size: 0.82rem;
+            color: #94a3b8;
+        }
+
+        /* Barra de acciones superiores */
+        .top-toolbar {
+            width: 100%;
+            max-width: 950px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        /* ==========================================
+           2. LA CANCHA DE BALONCESTO (FIBA 28:15)
+           ========================================== */
+        .court-container {
+            width: 100%;
+            max-width: 950px; /* Tamaño máximo para ordenadores */
+            aspect-ratio: 28 / 15; /* Relación de aspecto oficial de la cancha */
+            position: relative;
+            background-color: #1e293b; /* Azul pizarra deportivo */
+            border: 4px solid #f8fafc;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            touch-action: none; /* BLOQUEA el scroll y zoom táctil en la zona de la cancha */
+        }
+
+        /* Líneas de juego mediante SVG transparente superpuesto */
+        .court-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Permite clickear a través de las líneas */
+        }
+
+        /* ==========================================
+           3. FICHAS TÁCTICAS (TOKENS)
+           ========================================== */
+        .token {
+            position: absolute;
+            width: 4.5%; /* Tamaño proporcional al ancho de la cancha */
+            aspect-ratio: 1 / 1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2vw; /* Texto elástico con la pantalla */
+            color: #ffffff;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            /* CENTRADO PERFECTO: El punto de anclaje de left/top será el centro de la ficha */
+            transform: translate(-50%, -50%); 
+            transition: transform 0.1s ease;
+            touch-action: none; /* Clave para drag fluido en tablets */
+        }
+
+        /* Clase dinámica para deslizamiento táctico suave */
+        .token.animate-transition {
+            transition: left 0.6s ease-in-out, top 0.6s ease-in-out, transform 0.1s ease;
+        }
+
+        @media (min-width: 950px) {
+            .token { font-size: 12px; } /* Límite de tamaño de fuente en pantallas gigantes */
+        }
+
+        /* Fichas de Ataque (Azul Celeste) */
+        .token.attack {
+            background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
+            border: 2px solid #e0f2fe;
+        }
+
+        /* Fichas de Defensa (Rojo Coral) */
+        .token.defense {
+            background: radial-gradient(circle, #f87171 0%, #dc2626 100%);
+            border: 2px solid #fee2e2;
+        }
+
+        /* El Balón (Naranja - mismo tamaño de un jugador) */
+        .token.ball {
+            width: 4.5%; 
+            background: radial-gradient(circle, #f97316 0%, #ea580c 100%);
+            border: 1px solid #ffedd5;
+            z-index: 10; /* Siempre por encima de los jugadores */
+        }
+
+        /* Efecto visual al levantar la ficha */
+        .token:active {
+            cursor: grabbing;
+            transform: translate(-50%, -50%) scale(1.2); /* Agrandamos un poco bajo el dedo/ratón */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+
+        /* ==========================================
+           4. LÍNEA DE TIEMPO / TOOLBARS
+           ========================================== */
+        .action-btn {
+            background: #334155;
+            color: #f8fafc;
+            border: 1px solid #475569;
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .action-btn:hover:not(:disabled) {
+            background: #475569;
+        }
+
+        .action-btn:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        /* Estilos específicos de botones */
+        .action-btn.btn-save {
+            background: #059669;
+            border-color: #10b981;
+            color: #ffffff;
+        }
+        .action-btn.btn-save:hover:not(:disabled) {
+            background: #047857;
+        }
+
+        .action-btn.btn-undo {
+            background: #4338ca;
+            border-color: #6366f1;
+            color: #ffffff;
+        }
+        .action-btn.btn-undo:hover:not(:disabled) {
+            background: #3730a3;
+        }
+
+        .timeline-toolbar {
+            width: 100%;
+            max-width: 950px;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            background: #1e293b;
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        .timeline-btn {
+            background: #334155;
+            color: #f8fafc;
+            border: 1px solid #475569;
+            padding: 9px 15px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .timeline-btn:hover:not(:disabled) {
+            background: #475569;
+        }
+
+        .timeline-btn:active:not(:disabled) {
+            transform: scale(0.96);
+        }
+
+        .timeline-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .timeline-btn.btn-add {
+            background: #0284c7;
+            border-color: #38bdf8;
+            color: #ffffff;
+        }
+        .timeline-btn.btn-add:hover:not(:disabled) {
+            background: #0369a1;
+        }
+
+        .step-indicator {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #38bdf8;
+            background: #0f172a;
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            letter-spacing: 0.5px;
+            min-width: 130px;
+            text-align: center;
+        }
+
+        /* Notificación Toast discreta */
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid #38bdf8;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.88rem;
+            font-weight: 600;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            z-index: 200;
+            max-width: 90vw;
+            text-align: center;
+        }
+
+        .toast-notification.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 600px) {
+            .timeline-toolbar {
+                padding: 8px 8px;
+                gap: 5px;
+            }
+            .timeline-btn {
+                padding: 7px 9px;
+                font-size: 0.75rem;
+            }
+            .step-indicator {
+                font-size: 0.78rem;
+                padding: 6px 8px;
+                min-width: 95px;
+            }
+            .action-btn {
+                padding: 7px 10px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Indicador de conexión de red -->
+    <div class="network-badge online" id="network-status">
+        <span class="network-dot"></span>
+        <span id="network-text">Online</span>
+    </div>
+
+    <header>
+        <h1>Pizarra Táctica de Baloncesto</h1>
+        <p>Fase 5: Pila de Deshacer (LIFO) y Guardado con Validación Estricta</p>
+    </header>
+
+    <!-- Barra de acciones superiores: Deshacer y Guardar -->
+    <div class="top-toolbar">
+        <button class="action-btn btn-undo" id="btn-undo" disabled aria-label="Deshacer Movimiento">
+            ↩ Deshacer Movimiento
+        </button>
+        <button class="action-btn btn-save" id="btn-save" aria-label="Guardar Jugada">
+            💾 Guardar Jugada
+        </button>
+    </div>
+
+    <!-- La Cancha Táctica -->
+    <div class="court-container" id="basketball-court">
+        
+        <!-- Líneas Oficiales FIBA representadas en un plano 280x150 -->
+        <svg class="court-lines" viewBox="0 0 280 150">
+            <!-- Línea de medio campo -->
+            <line x1="140" y1="0" x2="140" y2="150" stroke="#f8fafc" stroke-width="2"/>
+            <!-- Círculo central -->
+            <circle cx="140" cy="75" r="18" fill="none" stroke="#f8fafc" stroke-width="2"/>
+            <circle cx="140" cy="75" r="2" fill="#f8fafc"/>
+            
+            <!-- Área Izquierda (Zona) -->
+            <rect x="0" y="46" width="58" height="58" fill="none" stroke="#f8fafc" stroke-width="2"/>
+            <!-- Semicírculo de tiros libres izquierdo -->
+            <path d="M 58,57 A 18,18 0 0,1 58,93" fill="none" stroke="#f8fafc" stroke-width="2"/>
+            <!-- Línea de Tres Puntos Izquierda (FIBA) -->
+            <path d="M 0,15 L 29,15 A 62.5,62.5 0 0,1 29,135 L 0,135" fill="none" stroke="#f8fafc" stroke-width="2"/>
+            
+            <!-- Área Derecha (Zona) -->
+            <rect x="222" y="46" width="58" height="58" fill="none" stroke="#f8fafc" stroke-width="2"/>
+            <!-- Semicírculo de tiros libres derecho -->
+            <path d="M 222,57 A 18,18 0 0,0 222,93" fill="none" stroke="#f8fafc" stroke-width="2"/>
+            <!-- Línea de Tres Puntos Derecha (FIBA) -->
+            <path d="M 280,15 L 251,15 A 62.5,62.5 0 0,0 251,135 L 280,135" fill="none" stroke="#f8fafc" stroke-width="2"/>
+        </svg>
+
+        <!-- FICHAS DE JUGADORES (Con identificador único) -->
+        <!-- Ataque (Azules) -->
+        <div class="token attack" id="atk-1" style="left: 42%; top: 50%;" data-role="player">1</div>
+        <div class="token attack" id="atk-2" style="left: 35%; top: 25%;" data-role="player">2</div>
+        <div class="token attack" id="atk-3" style="left: 35%; top: 75%;" data-role="player">3</div>
+        <div class="token attack" id="atk-4" style="left: 25%; top: 35%;" data-role="player">4</div>
+        <div class="token attack" id="atk-5" style="left: 20%; top: 65%;" data-role="player">5</div>
+
+        <!-- Defensa (Rojos) -->
+        <div class="token defense" id="def-1" style="left: 32%; top: 50%;" data-role="player">1</div>
+        <div class="token defense" id="def-2" style="left: 25%; top: 22%;" data-role="player">2</div>
+        <div class="token defense" id="def-3" style="left: 25%; top: 78%;" data-role="player">3</div>
+        <div class="token defense" id="def-4" style="left: 15%; top: 40%;" data-role="player">4</div>
+        <div class="token defense" id="def-5" style="left: 10%; top: 60%;" data-role="player">5</div>
+
+        <!-- El Balón (Naranja, ubicado ligeramente delante del base) -->
+        <div class="token ball" id="ball" style="left: 45%; top: 50%;"></div>
+
+    </div>
+
+    <!-- Línea de Tiempo Táctica -->
+    <div class="timeline-toolbar">
+        <button class="timeline-btn" id="btn-prev" aria-label="Paso Anterior">
+            ◀ Paso Anterior
+        </button>
+
+        <span class="step-indicator" id="step-display">Paso: 1 / 1</span>
+
+        <button class="timeline-btn btn-add" id="btn-add" aria-label="Añadir Paso">
+            + Añadir Paso
+        </button>
+
+        <button class="timeline-btn" id="btn-next" aria-label="Siguiente Paso">
+            Siguiente Paso ▶
+        </button>
+    </div>
+
+    <!-- Notificación en pantalla -->
+    <div class="toast-notification" id="toast"></div>
+
+    <!-- ==========================================
+        5. LÓGICA DE PROGRAMACIÓN (JAVASCRIPT)
+        ========================================== -->
+    <script>
+        // Referencias del DOM
+        const court = document.getElementById('basketball-court');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnAdd = document.getElementById('btn-add');
+        const btnNext = document.getElementById('btn-next');
+        const btnUndo = document.getElementById('btn-undo');
+        const btnSave = document.getElementById('btn-save');
+        const stepDisplay = document.getElementById('step-display');
+        const networkStatus = document.getElementById('network-status');
+        const networkText = document.getElementById('network-text');
+        const toast = document.getElementById('toast');
+        const allTokens = Array.from(document.querySelectorAll('.token'));
+
+        // CONSTANTES FÍSICAS Y DE ARQUITECTURA
+        const MIN_LIMIT = 2.25;
+        const MAX_LIMIT = 97.75;
+        const ANIMATION_DURATION_MS = 600;
+        const MAX_STACK_SIZE = 20; // Límite de seguridad en memoria RAM para tablets
+        const STORAGE_KEY_OFFLINE = 'pizarra_tactica_offline_sync';
+
+        // Variables de interacción táctil / ratón
+        let isDragging = false;
+        let activeToken = null;
+        let transitionTimeout = null;
+        let toastTimeout = null;
+        let dragInitialSnapshot = null;
+
+        // ==========================================
+        // GESTOR DE MEMORIA TÁCTICA
+        // ==========================================
+        const jugadaPasos = [];
+        let pasoActualIndex = 0; // Índice base 0
+
+        // PILA LIFO DE DESHACER
+        const historialMovimientos = [];
+
+        function mostrarToast(mensaje) {
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toast.textContent = mensaje;
+            toast.classList.add('show');
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+                toastTimeout = null;
+            }, 3500);
+        }
+
+        function capturarInstantaneaActual() {
+            const pasoSnapshot = {};
+            for (let i = 0; i < allTokens.length; i++) {
+                const token = allTokens[i];
+                const xVal = parseFloat(token.style.left);
+                const yVal = parseFloat(token.style.top);
+
+                pasoSnapshot[token.id] = {
+                    x: Number(xVal.toFixed(2)),
+                    y: Number(yVal.toFixed(2))
+                };
+            }
+            return pasoSnapshot;
+        }
+
+        function clonarObjeto(obj) {
+            return JSON.parse(JSON.stringify(obj));
+        }
+
+        function limpiarClaseTransicion() {
+            for (let i = 0; i < allTokens.length; i++) {
+                allTokens[i].classList.remove('animate-transition');
+            }
+        }
+
+        function renderizarCoordenadasEnCancha(coordsMap, conAnimacion = true) {
+            if (conAnimacion) {
+                if (transitionTimeout) clearTimeout(transitionTimeout);
+                for (let i = 0; i < allTokens.length; i++) {
+                    allTokens[i].classList.add('animate-transition');
+                }
+            }
+
+            for (let i = 0; i < allTokens.length; i++) {
+                const token = allTokens[i];
+                const coords = coordsMap[token.id];
+                if (coords) {
+                    token.style.left = `${coords.x}%`;
+                    token.style.top = `${coords.y}%`;
+                }
+            }
+
+            if (conAnimacion) {
+                transitionTimeout = setTimeout(() => {
+                    limpiarClaseTransicion();
+                    transitionTimeout = null;
+                }, ANIMATION_DURATION_MS);
+            }
+        }
+
+        function aplicarPasoEnCancha(indicePaso) {
+            const pasoDestino = jugadaPasos[indicePaso];
+            if (!pasoDestino) return;
+            renderizarCoordenadasEnCancha(pasoDestino, true);
+        }
+
+        function actualizarUI() {
+            const totalPasos = jugadaPasos.length;
+            const numeroHumano = pasoActualIndex + 1;
+            stepDisplay.textContent = `Paso: ${numeroHumano} / ${totalPasos}`;
+
+            btnPrev.disabled = (pasoActualIndex === 0);
+            btnNext.disabled = (pasoActualIndex === totalPasos - 1);
+            btnUndo.disabled = (historialMovimientos.length === 0);
+        }
+
+        function sincronizarPasoActivo() {
+            jugadaPasos[pasoActualIndex] = capturarInstantaneaActual();
+        }
+
+        function vaciarPilaDeshacer() {
+            historialMovimientos.length = 0;
+            btnUndo.disabled = true;
+        }
+
+        function inicializarMemoria() {
+            const pasoInicial = capturarInstantaneaActual();
+            jugadaPasos.push(clonarObjeto(pasoInicial));
+            actualizarUI();
+        }
+
+        // ==========================================
+        // LÓGICA DE PILA (UNDO / LIFO)
+        // ==========================================
+        btnUndo.addEventListener('click', () => {
+            if (historialMovimientos.length === 0) return;
+
+            const estadoAnterior = historialMovimientos.pop();
+            renderizarCoordenadasEnCancha(estadoAnterior, true);
+            sincronizarPasoActivo();
+            actualizarUI();
+        });
+
+        // ==========================================
+        // CONTROLADORES DE EVENTOS DE LÍNEA DE TIEMPO
+        // ==========================================
+        btnAdd.addEventListener('click', () => {
+            sincronizarPasoActivo();
+            const copiaProfunda = clonarObjeto(jugadaPasos[pasoActualIndex]);
+            jugadaPasos.push(copiaProfunda);
+
+            pasoActualIndex = jugadaPasos.length - 1;
+            vaciarPilaDeshacer();
+            actualizarUI();
+        });
+
+        btnPrev.addEventListener('click', () => {
+            if (pasoActualIndex > 0) {
+                sincronizarPasoActivo();
+                pasoActualIndex--;
+                vaciarPilaDeshacer();
+                aplicarPasoEnCancha(pasoActualIndex);
+                actualizarUI();
+            }
+        });
+
+        btnNext.addEventListener('click', () => {
+            if (pasoActualIndex < jugadaPasos.length - 1) {
+                sincronizarPasoActivo();
+                pasoActualIndex++;
+                vaciarPilaDeshacer();
+                aplicarPasoEnCancha(pasoActualIndex);
+                actualizarUI();
+            }
+        });
+
+        // ==========================================
+        // CONTROL DE CONECTIVIDAD Y PERSISTENCIA (CON VALIDACIÓN ACTIVA)
+        // ==========================================
+        function actualizarEstadoRed() {
+            if (navigator.onLine) {
+                networkStatus.className = 'network-badge online';
+                networkText.textContent = 'Online';
+            } else {
+                networkStatus.className = 'network-badge offline';
+                networkText.textContent = 'Offline';
+            }
+        }
+
+        function sincronizarPendientesEnNube() {
+            const jugadaLocal = localStorage.getItem(STORAGE_KEY_OFFLINE);
+            if (jugadaLocal && navigator.onLine) {
+                try {
+                    const parsed = JSON.parse(jugadaLocal);
+                    localStorage.removeItem(STORAGE_KEY_OFFLINE);
+                    mostrarToast(`🌐 Conexión restablecida: '${parsed.nombre}' sincronizada con éxito en la nube.`);
+                } catch (err) {
+                    console.error('Error al sincronizar datos diferidos:', err);
+                }
+            }
+        }
+
+        // CONTROLADOR DE GUARDADO CON VALIDACIÓN ESTRICTA Y RETORNO ANTICIPADO
+        btnSave.addEventListener('click', () => {
+            // 1. Solicitar el nombre de la jugada al entrenador
+            const inputNombre = prompt("Escribe el nombre de la jugada para guardarla:");
+
+            // 2. Si el usuario pulsa "Cancelar", prompt retorna null -> Cancelación silenciosa
+            if (inputNombre === null) {
+                return;
+            }
+
+            // 3. Sanitización de espacios en blanco
+            const nombreLimpio = inputNombre.trim();
+
+            // 4. Validación de entrada vacía o puro espacio en blanco
+            if (nombreLimpio === "") {
+                alert("¡Error! No puedes guardar una jugada sin ponerle un nombre.");
+                return; // Retorno anticipado: Detención total del flujo sin tocar almacenamiento
+            }
+
+            // 5. Flujo de guardado seguro con nombre validado
+            sincronizarPasoActivo();
+
+            const paqueteTactico = {
+                id: `jugada_${Date.now()}`,
+                nombre: nombreLimpio,
+                pasos: jugadaPasos,
+                fechaModificacion: new Date().toISOString()
+            };
+
+            if (navigator.onLine) {
+                // Guardado exitoso en la nube (simulado)
+                mostrarToast(`¡La jugada '${nombreLimpio}' se ha guardado con éxito en la nube!`);
+            } else {
+                // Modo Offline: almacenamiento local seguro
+                try {
+                    localStorage.setItem(STORAGE_KEY_OFFLINE, JSON.stringify(paqueteTactico));
+                    mostrarToast(`Pabellón sin cobertura. '${nombreLimpio}' guardada temporalmente en tu tablet.`);
+                } catch (e) {
+                    mostrarToast('Error: Memoria local insuficiente para almacenar la jugada.');
+                }
+            }
+        });
+
+        window.addEventListener('online', () => {
+            actualizarEstadoRed();
+            sincronizarPendientesEnNube();
+        });
+
+        window.addEventListener('offline', () => {
+            actualizarEstadoRed();
+            mostrarToast('Modo sin conexión activado.');
+        });
+
+        // ==========================================
+        // EVENTOS DE ARRASTRE TÁCTIL / RATÓN
+        // ==========================================
+        function startDrag(e) {
+            const token = e.target.closest('.token');
+            if (!token) return;
+
+            token.classList.remove('animate-transition');
+
+            isDragging = true;
+            activeToken = token;
+            
+            dragInitialSnapshot = capturarInstantaneaActual();
+
+            court.appendChild(token); 
+        }
+
+        function drag(e) {
+            if (!isDragging || !activeToken) return;
+
+            e.preventDefault();
+
+            const rect = court.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+            let xPercent = ((clientX - rect.left) / rect.width) * 100;
+            let yPercent = ((clientY - rect.top) / rect.height) * 100;
+
+            if (xPercent < MIN_LIMIT) xPercent = MIN_LIMIT;
+            else if (xPercent > MAX_LIMIT) xPercent = MAX_LIMIT;
+
+            if (yPercent < MIN_LIMIT) yPercent = MIN_LIMIT;
+            else if (yPercent > MAX_LIMIT) yPercent = MAX_LIMIT;
+
+            activeToken.style.left = `${xPercent}%`;
+            activeToken.style.top = `${yPercent}%`;
+        }
+
+        function stopDrag() {
+            if (isDragging && activeToken) {
+                const snapshotFinal = capturarInstantaneaActual();
+
+                const id = activeToken.id;
+                const posInicial = dragInitialSnapshot ? dragInitialSnapshot[id] : null;
+                const posFinal = snapshotFinal[id];
+
+                const huboMovimiento = posInicial && (posInicial.x !== posFinal.x || posInicial.y !== posFinal.y);
+
+                if (huboMovimiento) {
+                    historialMovimientos.push(clonarObjeto(dragInitialSnapshot));
+
+                    if (historialMovimientos.length > MAX_STACK_SIZE) {
+                        historialMovimientos.shift();
+                    }
+                }
+
+                sincronizarPasoActivo();
+                actualizarUI();
+            }
+            isDragging = false;
+            activeToken = null;
+            dragInitialSnapshot = null;
+        }
+
+        // Asignación de listeners
+        court.addEventListener('mousedown', startDrag);
+        window.addEventListener('mousemove', drag);
+        window.addEventListener('mouseup', stopDrag);
+
+        court.addEventListener('touchstart', startDrag, { passive: false });
+        window.addEventListener('touchmove', drag, { passive: false });
+        window.addEventListener('touchend', stopDrag);
+
+        // Inicialización
+        actualizarEstadoRed();
+        inicializarMemoria();
+    </script>
+</body>
+</html>

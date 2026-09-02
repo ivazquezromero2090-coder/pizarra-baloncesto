@@ -1,0 +1,348 @@
+/* ==========================================
+   1. ESTILOS GENERALES Y DISEÑO EN DOS COLUMNAS
+   ========================================== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0f172a; /* Azul noche oscuro */
+    color: #f8fafc;
+    display: flex;
+    height: 100vh;
+    overflow: hidden; /* Evita scrolls incómodos en la tablet */
+    padding: 10px;
+}
+
+/* Contenedor Principal Adaptable */
+.app-container {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    gap: 15px;
+}
+
+/* ==========================================
+   2. COLUMNA IZQUIERDA: BIBLIOTECA LATERAL
+   ========================================== */
+.sidebar {
+    width: 280px;
+    background-color: #1e293b;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    border: 1px solid #334155;
+}
+
+.role-selector {
+    display: flex;
+    background-color: #0f172a;
+    padding: 4px;
+    border-radius: 8px;
+    gap: 5px;
+}
+
+.role-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    color: #94a3b8;
+    padding: 6px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.role-btn.active {
+    background-color: #38bdf8;
+    color: #0f172a;
+}
+
+.btn-new-play {
+    background-color: #10b981; /* Verde esmeralda */
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.2s ease;
+}
+
+.btn-new-play:hover {
+    background-color: #059669;
+}
+
+.library-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto; /* Scroll dentro del listado */
+}
+
+.library-section h3 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    color: #94a3b8;
+    letter-spacing: 0.05em;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 5px;
+}
+
+.plays-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 15px;
+}
+
+.play-item {
+    background-color: #0f172a;
+    padding: 8px 10px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.play-item:hover {
+    border-color: #38bdf8;
+}
+
+.play-item.active {
+    background-color: #0369a1;
+    border-color: #38bdf8;
+}
+
+.play-item-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.action-icon {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+.action-icon:hover {
+    background-color: #334155;
+    color: #f8fafc;
+}
+
+/* ==========================================
+   3. COLUMNA DERECHA: PIZARRA Y CONTROLES
+   ========================================== */
+.main-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.control-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #1e293b;
+    padding: 10px 15px;
+    border-radius: 12px;
+    border: 1px solid #334155;
+}
+
+.control-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-action {
+    background-color: #334155;
+    color: #f8fafc;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-action:hover {
+    background-color: #475569;
+}
+
+.btn-action:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.btn-action.primary {
+    background-color: #38bdf8;
+    color: #0f172a;
+}
+
+.btn-action.primary:hover {
+    background-color: #7dd3fc;
+}
+
+/* Indicador de conexión */
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #10b981; /* Verde Online */
+}
+
+.status-dot.offline {
+    background-color: #94a3b8; /* Gris Offline */
+}
+
+/* Notificaciones flotantes */
+.toast-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #0284c7;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+    font-weight: bold;
+    z-index: 1000;
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+/* La Cancha */
+.court-container {
+    flex: 1;
+    position: relative;
+    background-color: #1e293b;
+    border: 4px solid #f8fafc;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    touch-action: none;
+    overflow: hidden;
+}
+
+.court-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* Fichas Tácticas */
+.token {
+    position: absolute;
+    width: 4.5%;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2vw;
+    color: #ffffff;
+    cursor: grab;
+    user-select: none;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    transform: translate(-50%, -50%);
+    touch-action: none;
+    z-index: 2;
+}
+
+/* Clase de animación para transiciones suaves */
+.animate-transition {
+    transition: left 0.6s ease-in-out, top 0.6s ease-in-out;
+}
+
+@media (min-width: 950px) {
+    .token { font-size: 12px; }
+}
+
+.token.attack {
+    background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
+    border: 2px solid #e0f2fe;
+}
+
+.token.defense {
+    background: radial-gradient(circle, #f87171 0%, #dc2626 100%);
+    border: 2px solid #fee2e2;
+}
+
+.token.ball {
+    width: 4.5%; /* Balón del mismo tamaño que los jugadores */
+    background: radial-gradient(circle, #f97316 0%, #ea580c 100%);
+    border: 1px solid #ffedd5;
+    z-index: 10;
+}
+
+.token:active {
+    cursor: grabbing;
+    transform: translate(-50%, -50%) scale(1.2);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    z-index: 20;
+}
+
+/* ==========================================
+   4. LÍNEA DE TIEMPO (BARRA INFERIOR)
+   ========================================== */
+.timeline-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #1e293b;
+    padding: 10px 15px;
+    border-radius: 12px;
+    border: 1px solid #334155;
+}
+
+.step-indicator {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: #38bdf8;
+}
+
+/* Animación Fade In */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

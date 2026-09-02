@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Pizarra Táctica de Baloncesto - PRO MVP</title>
+    <style>
+        /* ==========================================
+           1. ESTILOS GENERALES Y DISEÑO EN DOS COLUMNAS
+           ========================================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f172a; /* Azul noche oscuro */
+            color: #f8fafc;
+            display: flex;
+            height: 100vh;
+            overflow: hidden; /* Evita scrolls incómodos en la tablet */
+            padding: 10px;
+        }
+
+        /* Contenedor Principal Adaptable */
+        .app-container {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            gap: 15px;
+        }
+
+        /* ==========================================
+           2. COLUMNA IZQUIERDA: BIBLIOTECA LATERAL
+           ========================================== */
+        .sidebar {
+            width: 280px;
+            background-color: #1e293b;
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            border: 1px solid #334155;
+        }
+
+        .role-selector {
+            display: flex;
+            background-color: #0f172a;
+            padding: 4px;
+            border-radius: 8px;
+            gap: 5px;
+        }
+
+        .role-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: #94a3b8;
+            padding: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .role-btn.active {
+            background-color: #38bdf8;
+            color: #0f172a;
+        }
+
+        .btn-new-play {
+            background-color: #10b981; /* Verde esmeralda */
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: background 0.2s ease;
+        }
+
+        .btn-new-play:hover {
+            background-color: #059669;
+        }
+
+        .library-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow-y: auto; /* Scroll dentro del listado */
+        }
+
+        .library-section h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            color: #94a3b8;
+            letter-spacing: 0.05em;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 5px;
+        }
+
+        .plays-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 15px;
+        }
+
+        .play-item {
+            background-color: #0f172a;
+            padding: 8px 10px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .play-item:hover {
+            border-color: #38bdf8;
+        }
+
+        .play-item.active {
+            background-color: #0369a1;
+            border-color: #38bdf8;
+        }
+
+        .play-item-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .action-icon {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 0.9rem;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: background 0.2s ease;
+        }
+
+        .action-icon:hover {
+            background-color: #334155;
+            color: #f8fafc;
+        }
+
+        /* ==========================================
+           3. COLUMNA DERECHA: PIZARRA Y CONTROLES
+           ========================================== */
+        .main-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .control-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #1e293b;
+            padding: 10px 15px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn-action {
+            background-color: #334155;
+            color: #f8fafc;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-action:hover {
+            background-color: #475569;
+        }
+
+        .btn-action:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-action.primary {
+            background-color: #38bdf8;
+            color: #0f172a;
+        }
+
+        .btn-action.primary:hover {
+            background-color: #7dd3fc;
+        }
+
+        /* Indicador de conexión */
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #10b981; /* Verde Online */
+        }
+
+        .status-dot.offline {
+            background-color: #94a3b8; /* Gris Offline */
+        }
+
+        /* Notificaciones flotantes */
+        .toast-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #0284c7;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+            font-weight: bold;
+            z-index: 1000;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* La Cancha */
+        .court-container {
+            flex: 1;
+            position: relative;
+            background-color: #1e293b;
+            border: 4px solid #f8fafc;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            touch-action: none;
+            overflow: hidden;
+        }
+
+        .court-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        /* Fichas Tácticas */
+        .token {
+            position: absolute;
+            width: 4.5%;
+            aspect-ratio: 1 / 1;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2vw;
+            color: #ffffff;
+            cursor: grab;
+            user-select: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+            transform: translate(-50%, -50%);
+            touch-action: none;
+            z-index: 2;
+        }
+
+        /* Clase de animación para transiciones suaves */
+        .animate-transition {
+            transition: left 0.6s ease-in-out, top 0.6s ease-in-out;
+        }
+
+        @media (min-width: 950px) {
+            .token { font-size: 12px; }
+        }
+
+        .token.attack {
+            background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
+            border: 2px solid #e0f2fe;
+        }
+
+        .token.defense {
+            background: radial-gradient(circle, #f87171 0%, #dc2626 100%);
+            border: 2px solid #fee2e2;
+        }
+
+        .token.ball {
+            width: 4.5%; /* Balón del mismo tamaño que los jugadores para fácil arrastre */
+            background: radial-gradient(circle, #f97316 0%, #ea580c 100%);
+            border: 1px solid #ffedd5;
+            z-index: 10;
+        }
+
+        .token:active {
+            cursor: grabbing;
+            transform: translate(-50%, -50%) scale(1.2);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            z-index: 20;
+        }
+
+        /* ==========================================
+           4. LÍNEA DE TIEMPO (BARRA INFERIOR)
+           ========================================== */
+        .timeline-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #1e293b;
+            padding: 10px 15px;
+            border-radius: 12px;
+            border: 1px solid #334155;
+        }
+
+        .step-indicator {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #38bdf8;
+        }
+
+        /* Animación Fade In */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Toast de Notificaciones -->
+    <div class="toast-notification" id="toast"></div>
+
+    <div class="app-container">
+        
+        <!-- 1. COLUMNA IZQUIERDA: BIBLIOTECA -->
+        <div class="sidebar">
+            <!-- Selector de Roles -->
+            <div class="role-selector">
+                <button class="role-btn active" id="btn-role-coach" onclick="cambiarRol('entrenador')">Entrenador</button>
+                <button class="role-btn" id="btn-role-admin" onclick="cambiarRol('admin')">Admin Escuela</button>
+            </div>
+
+            <!-- Botón de Nueva Jugada (OPCIÓN B) -->
+            <button class="btn-new-play" onclick="nuevaJugada()">
+                <span>➕ Nueva Jugada</span>
+            </button>
+
+            <!-- Secciones de la Biblioteca -->
+            <div class="library-section">
+                <h3>Mis Jugadas</h3>
+                <div class="plays-list" id="list-personal">
+                    <!-- Se llena con JavaScript -->
+                </div>
+
+                <h3>Jugadas de la Escuela</h3>
+                <div class="plays-list" id="list-school">
+                    <!-- Se llena con JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. COLUMNA DERECHA: PIZARRA Y CONTROLES -->
+        <div class="main-panel">
+            <!-- Barra de Control Superior -->
+            <div class="control-bar">
+                <div class="control-group">
+                    <button class="btn-action" onclick="deshacerMovimiento()">↩ Deshacer</button>
+                    <button class="btn-action primary" onclick="guardarJugada()">💾 Guardar Jugada</button>
+                    <button class="btn-action" id="btn-duplicate" style="display: none; background-color: #0284c7;" onclick="duplicarJugadaOficial()">📋 Duplicar para Editar</button>
+                </div>
+                
+                <div class="control-group">
+                    <span id="play-title-display" style="font-weight: bold; color: #38bdf8;">Lienzo Nuevo</span>
+                    <div class="connection-status">
+                        <div class="status-dot" id="status-dot"></div>
+                        <span id="status-text">Online</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenedor de Cancha Táctica -->
+            <div class="court-container" id="basketball-court">
+                <!-- Cancha en SVG -->
+                <svg class="court-lines" viewBox="0 0 280 150">
+                    <line x1="140" y1="0" x2="140" y2="150" stroke="#f8fafc" stroke-width="2"/>
+                    <circle cx="140" cy="75" r="18" fill="none" stroke="#f8fafc" stroke-width="2"/>
+                    <circle cx="140" cy="75" r="2" fill="#f8fafc"/>
+                    
+                    <rect x="0" y="46" width="58" height="58" fill="none" stroke="#f8fafc" stroke-width="2"/>
+                    <path d="M 58,57 A 18,18 0 0,1 58,93" fill="none" stroke="#f8fafc" stroke-width="2"/>
+                    <path d="M 0,15 L 29,15 A 62.5,62.5 0 0,1 29,135 L 0,135" fill="none" stroke="#f8fafc" stroke-width="2"/>
+                    
+                    <rect x="222" y="46" width="58" height="58" fill="none" stroke="#f8fafc" stroke-width="2"/>
+                    <path d="M 222,57 A 18,18 0 0,0 222,93" fill="none" stroke="#f8fafc" stroke-width="2"/>
+                    <path d="M 280,15 L 251,15 A 62.5,62.5 0 0,0 251,135 L 280,135" fill="none" stroke="#f8fafc" stroke-width="2"/>
+                </svg>
+
+                <!-- FICHAS TÁCTICAS -->
+                <!-- Atacantes Azules (1-5) -->
+                <div class="token attack" style="left: 42%; top: 50%;" id="token-a1">1</div>
+                <div class="token attack" style="left: 35%; top: 25%;" id="token-a2">2</div>
+                <div class="token attack" style="left: 35%; top: 75%;" id="token-a3">3</div>
+                <div class="token attack" style="left: 25%; top: 35%;" id="token-a4">4</div>
+                <div class="token attack" style="left: 20%; top: 65%;" id="token-a5">5</div>
+
+                <!-- Defensores Rojos (1-5) -->
+                <div class="token defense" style="left: 32%; top: 50%;" id="token-d1">1</div>
+                <div class="token defense" style="left: 25%; top: 22%;" id="token-d2">2</div>
+                <div class="token defense" style="left: 25%; top: 78%;" id="token-d3">3</div>
+                <div class="token defense" style="left: 15%; top: 40%;" id="token-d4">4</div>
+                <div class="token defense" style="left: 10%; top: 60%;" id="token-d5">5</div>
+
+                <!-- Balón Naranja -->
+                <div class="token ball" style="left: 45%; top: 50%;" id="token-ball"></div>
+            </div>
+
+            <!-- Línea de Tiempo Inferior -->
+            <div class="timeline-bar">
+                <button class="btn-action" id="btn-prev" onclick="cambiarPaso(-1)" disabled>◀ Paso Anterior</button>
+                <div class="step-indicator" id="step-indicator">Paso: 1 / 1</div>
+                <button class="btn-action" onclick="crearNuevoPaso()">➕ Añadir Paso</button>
+                <button class="btn-action" id="btn-next" onclick="cambiarPaso(1)" disabled>Siguiente Paso ▶</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ==========================================
+       5. PROGRAMACIÓN LOGICA (JAVASCRIPT)
+       ========================================== -->
+    <script>
+        // Coordenadas Iniciales por Defecto de las 11 fichas
+        const POSICIONES_INICIALES = {
+            'token-a1': { x: 42, y: 50 },
+            'token-a2': { x: 35, y: 25 },
+            'token-a3': { x: 35, y: 75 },
+            'token-a4': { x: 25, y: 35 },
+            'token-a5': { x: 20, y: 65 },
+            'token-d1': { x: 32, y: 50 },
+            'token-d2': { x: 25, y: 22 },
+            'token-d3': { x: 25, y: 78 },
+            'token-d4': { x: 15, y: 40 },
+            'token-d5': { x: 10, y: 60 },
+            'token-ball': { x: 45, y: 50 }
+        };
+
+        // Variables de Estado de la Aplicación
+        let rolActual = 'entrenador'; // 'entrenador' o 'admin'
+        let jugadaPasos = []; // Secuencia de pasos tácticos en memoria
+        let pasoActivoIndex = 0; // Índice del paso visible en pantalla (0 es Paso 1)
+        let historialMovimientos = []; // Pila LIFO para deshacer movimientos en el paso actual
+        let jugadaActivaId = null; // ID de la jugada cargada de localStorage (si existe)
+        let nombreJugadaActiva = "Lienzo Nuevo";
+        let esJugadaOficialActiva = false; // Indica si la jugada abierta pertenece a la escuela
+        let tieneCambiosSinGuardar = false;
+
+        // Referencias del DOM
+        const court = document.getElementById('basketball-court');
+        const tokens = document.querySelectorAll('.token');
+        const btnPrev = document.getElementById('btn-prev');
+        const btnNext = document.getElementById('btn-next');
+        const stepIndicator = document.getElementById('step-indicator');
+        const playTitleDisplay = document.getElementById('play-title-display');
+        const btnDuplicate = document.getElementById('btn-duplicate');
+        const listPersonal = document.getElementById('list-personal');
+        const listSchool = document.getElementById('list-school');
+        const statusDot = document.getElementById('status-dot');
+        const statusText = document.getElementById('status-text');
+
+        // Inicializar Aplicación
+        window.addEventListener('load', () => {
+            inicializarLienzoNuevo();
+            cargarBiblioteca();
+            configurarArrastre();
+            comprobarConectividad();
+        });
+
+        // 1. INICIALIZAR LIENZO NUEVO
+        function inicializarLienzoNuevo() {
+            jugadaPasos = [JSON.parse(JSON.stringify(POSICIONES_INICIALES))]; // Paso semilla
+            pasoActivoIndex = 0;
+            historialMovimientos = [];
+            jugadaActivaId = null;
+            nombreJugadaActiva = "Lienzo Nuevo";
+            esJugadaOficialActiva = false;
+            tieneCambiosSinGuardar = false;
+            
+            aplicarPosicionesPantalla(jugadaPasos[0]);
+            actualizarUI();
+        }
+
+        // 2. ACCIÓN BOTÓN NUEVA JUGADA (OPCIÓN B CON CONTROL DE EXCEPCIÓN)
+        function nuevaJugada() {
+            if (tieneCambiosSinGuardar) {
+                const confirmar = confirm("⚠️ Tienes cambios sin guardar en esta jugada táctica. ¿Estás seguro de que quieres limpiar el lienzo y empezar una Nueva Jugada?");
+                if (!confirmar) return; // Retorno anticipado (Early Return)
+            }
+            inicializarLienzoNuevo();
+            mostrarToast("Lienzo reiniciado. ¡Empieza a diseñar!");
+        }
+
+        // 3. APLICAR COORDENADAS A LA PANTALLA TÁCTIL
+        function aplicarPosicionesPantalla(posiciones) {
+            for (let id in posiciones) {
+                const tokenElement = document.getElementById(id);
+                if (tokenElement) {
+                    tokenElement.style.left = `${posiciones[id].x}%`;
+                    tokenElement.style.top = `${posiciones[id].y}%`;
+                }
+            }
+        }
+
+        // 4. CONFIGURAR DRAG & DROP MULTITÁCTIL CON LÍMITES SÉGURAS
+        function configurarArrastre() {
+            let isDragging = false;
+            let activeToken = null;
+
+            function startDrag(e) {
+                const token = e.target.closest('.token');
+                if (!token || esJugadaOficialActiva && rolActual === 'entrenador') return; // Bloqueo si es oficial solo lectura
+
+                isDragging = true;
+                activeToken = token;
+                
+                // Retiramos la animación suave para que el arrastre sea inmediato
+                activeToken.classList.remove('animate-transition');
+                court.appendChild(token); // Traer al frente
+                
+                // Guardar foto del estado inmediatamente anterior para el historial de deshacer (Push)
+                guardarEstadoEnHistorial();
+            }
+
+            function drag(e) {
+                if (!isDragging || !activeToken) return;
+                e.preventDefault();
+
+                const rect = court.getBoundingClientRect();
+                const clientX = e.touches ? e.touches.clientX : e.clientX;
+                const clientY = e.touches ? e.touches.clientY : e.clientY;
+
+                let xPercent = ((clientX - rect.left) / rect.width) * 100;
+                let yPercent = ((clientY - rect.top) / rect.height) * 100;
+
+                // FASE 2: Lógica de Límites Físicos (Margen de Radio del 2.25% para evitar cortes)
+                const LIMIT_MIN = 2.25;
+                const LIMIT_MAX = 97.75;
+
+                if (xPercent < LIMIT_MIN) xPercent = LIMIT_MIN;
+                else if (xPercent > LIMIT_MAX) xPercent = LIMIT_MAX;
+
+                if (yPercent < LIMIT_MIN) yPercent = LIMIT_MIN;
+                else if (yPercent > LIMIT_MAX) yPercent = LIMIT_MAX;
+
+                activeToken.style.left = `${xPercent}%`;
+                activeToken.style.top = `${yPercent}%`;
+            }
+
+            function stopDrag() {
+                if (isDragging && activeToken) {
+                    // Guardamos la posición final en la estructura de datos del paso actual
+                    const rect = court.getBoundingClientRect();
+                    const xPercent = (parseFloat(activeToken.style.left) || 0);
+                    const yPercent = (parseFloat(activeToken.style.top) || 0);
+                    
+                    jugadaPasos[pasoActivoIndex][activeToken.id] = { x: xPercent, y: yPercent };
+                    tieneCambiosSinGuardar = true;
+                }
+                isDragging = false;
+                activeToken = null;
+            }
+
+            court.addEventListener('mousedown', startDrag);
+            window.addEventListener('mousemove', drag);
+            window.addEventListener('mouseup', stopDrag);
+
+            court.addEventListener('touchstart', startDrag, { passive: false });
+            window.addEventListener('touchmove', drag, { passive: false });
+            window.addEventListener('touchend', stopDrag);
+        }
+
+        // 5. HISTORIAL DE DESHACER (PILA LIFO)
+        function guardarEstadoEnHistorial() {
+            // Clonamos el paso actual
+            const copiaEstado = JSON.parse(JSON.stringify(jugadaPasos[pasoActivoIndex]));
+            historialMovimientos.push(copiaEstado);
+            
+            // Limitamos la pila a los últimos 20 movimientos
+            if (historialMovimientos.length > 20) {
+                historialMovimientos.shift();
+            }
+        }
+
+        function deshacerMovimiento() {
+            if (historialMovimientos.length === 0) {
+                mostrarToast("Ya estás en el estado inicial de este paso.");
+                return;
+            }
+
+            // Retiramos el último "plato" de la pila (Pop)
+            const estadoAnterior = historialMovimientos.pop();
+            jugadaPasos[pasoActivoIndex] = estadoAnterior;
+            
+            // Animamos las fichas de vuelta a su posición anterior
+            aplicarAnimacionTemporal();
+            aplicarPosicionesPantalla(estadoAnterior);
+            tieneCambiosSinGuardar = true;
+        }
+
+        // 6. GESTIÓN DE PASOS Y LÍNEA DE TIEMPO (CLONACIÓN PROFUNDA)
+        function crearNuevoPaso() {
+            // Guardar el estado actual mediante Clonación Profunda (Copia por Valor)
+            const pasoClonado = JSON.parse(JSON.stringify(jugadaPasos[pasoActivoIndex]));
+            
+            // Añadimos el nuevo paso al final de la secuencia
+            jugadaPasos.splice(pasoActivoIndex + 1, 0, pasoClonado);
+            pasoActivoIndex++;
+            historialMovimientos = []; // Nueva pila para este paso
+            tieneCambiosSinGuardar = true;
+
+            aplicarPosicionesPantalla(jugadaPasos[pasoActivoIndex]);
+            actualizarUI();
+            mostrarToast(`Paso ${pasoActivoIndex + 1} creado a partir del anterior.`);
+        }
+
+        function cambiarPaso(direccion) {
+            const nuevoIndex = pasoActivoIndex + direccion;
+            if (nuevoIndex < 0 || nuevoIndex >= jugadaPasos.length) return; // Excepción
+
+            pasoActivoIndex = nuevoIndex;
+            historialMovimientos = []; // Limpiamos la pila táctica al cambiar de paso
+
+            aplicarAnimacionTemporal();
+            aplicarPosicionesPantalla(jugadaPasos[pasoActivoIndex]);
+            actualizarUI();
+        }
+
+        // FASE 4: Aplicación dinámica de transiciones suaves
+        function aplicarAnimacionTemporal() {
+            tokens.forEach(token => token.classList.add('animate-transition'));
+            setTimeout(() => {
+                tokens.forEach(token => token.classList.remove('animate-transition'));
+            }, 600); // 600ms que coincide con la duración de la animación CSS
+        }
+
+        // 7. ROLES Y AUTORIZACIÓN (ADMINISTRACIÓN VS ENTRENADOR)
+        function cambiarRol(rol) {
+            rolActual = rol;
+            document.getElementById('btn-role-coach').classList.toggle('active', rol === 'entrenador');
+            document.getElementById('btn-role-admin').classList.toggle('active', rol === 'admin');
+            
+            actualizarUI();
+            mostrarToast(`Cambiado al modo: ${rol === 'admin' ? 'Administrador de la Escuela' : 'Entrenador'}`);
+        }
+
+        // 8. GUARDADO DE JUGADAS (VALIDACIÓN CON NOMBRE EXIGIDO AL FINAL)
+        function guardarJugada() {
+            if (esJugadaOficialActiva && rolActual === 'entrenador') {
+                mostrarToast("No tienes autorización para editar jugadas oficiales de la escuela.");
+                return;
+            }
+
+            // Exigimos un nombre para la jugada utilizando un prompt de texto
+            const nombreSugerido = jugadaActivaId ? nombreJugadaActiva : "";
+            const nombreIntroducido = prompt("Escribe el nombre de la jugada táctica:", nombreSugerido);
+            
+            if (nombreIntroducido === null) return; // Cancelación silenciosa
+            
+            const nombreLimpio = nombreIntroducido.trim();
+            if (nombreLimpio === "") {
+                alert("❌ ¡Error! No puedes guardar una jugada sin ponerle un nombre.");
+                return; // Retorno anticipado
+            }
+
+            const nuevaJugadaObjeto = {
+                id: jugadaActivaId || Date.now().toString(), // ID Único de control
+                nombre: nombreLimpio,
+                pasos: jugadaPasos
+            };
+
+            const esOnline = navigator.onLine;
+            let claveGuardado = 'jugadas_personales_entrenador';
+
+            if (rolActual === 'admin') {
+                claveGuardado = 'jugadas_oficiales_escuela';
+            }
+
+            let listado = JSON.parse(localStorage.getItem(claveGuardado)) || [];
+            
+            // Si ya existe la actualizamos, si no, la añadimos
+            const indexExistente = listado.findIndex(j => j.id === nuevaJugadaObjeto.id);
+            if (indexExistente >= 0) {
+                listado[indexExistente] = nuevaJugadaObjeto;
+            } else {
+                listado.push(nuevaJugadaObjeto);
+            }
+
+            localStorage.setItem(claveGuardado, JSON.stringify(listado));
+
+            jugadaActivaId = nuevaJugadaObjeto.id;
+            nombreJugadaActiva = nuevaJugadaObjeto.nombre;
+            tieneCambiosSinGuardar = false;
+
+            cargarBiblioteca();
+            actualizarUI();
+
+            if (esOnline) {
+                mostrarToast(`☁️ Jugada "${nombreLimpio}" guardada con éxito en la nube de la escuela.`);
+            } else {
+                mostrarToast(`💾 Sin cobertura. "${nombreLimpio}" guardada temporalmente en tu tablet.`);
+            }
+        }
+
+        // 9. COPIAR JUGADA OFICIAL PARA PODER EDITARLA (CLONACIÓN PROFUNDA)
+        function duplicarJugadaOficial() {
+            if (!esJugadaOficialActiva) return;
+
+            const confirmar = confirm(`¿Quieres hacer una copia de "${nombreJugadaActiva}" en tus jugadas personales para poder editarla?`);
+            if (!confirmar) return;
+
+            // Clonación profunda
+            const jugadaClonada = {
+                id: Date.now().toString(), // Generamos nuevo ID único
+                nombre: `${nombreJugadaActiva} (Copia)`,
+                pasos: JSON.parse(JSON.stringify(jugadaPasos))
+            };
+
+            let listadoPersonales = JSON.parse(localStorage.getItem('jugadas_personales_entrenador')) || [];
+            listadoPersonales.push(jugadaClonada);
+            localStorage.setItem('jugadas_personales_entrenador', JSON.stringify(listadoPersonales));
+
+            cargarBiblioteca();
+            cargarJugada(jugadaClonada.id, false); // La cargamos directamente como personal
+            mostrarToast(`📋 Copia creada. ¡Ya puedes editarla de forma libre!`);
+        }
+
+        // 10. EDITAR NOMBRE DE JUGADAS (METADATOS INDEPENDIENTES)
+        function editarNombreJugada(e, id, esOficial) {
+            e.stopPropagation(); // Evitamos que cargue la jugada al hacer clic en el botón de renombrar
+            
+            const claveGuardado = esOficial ? 'jugadas_oficiales_escuela' : 'jugadas_personales_entrenador';
+            let listado = JSON.parse(localStorage.getItem(claveGuardado)) || [];
+            const jugada = listado.find(j => j.id === id);
+            
+            if (!jugada) return;
+
+            const nuevoNombre = prompt("Escribe el nuevo nombre para la jugada:", jugada.nombre);
+            if (nuevoNombre === null) return; // Cancelación silenciosa
+
+            const nombreLimpio = nuevoNombre.trim();
+            if (nombreLimpio === "") {
+                alert("❌ ¡Error! El nombre no puede estar totalmente vacío.");
+                return;
+            }
+
+            // Cambiamos el metadato del nombre respetando su ID y pasos
+            jugada.nombre = nombreLimpio;
+            localStorage.setItem(claveGuardado, JSON.stringify(listado));
+
+            if (jugadaActivaId === id) {
+                nombreJugadaActiva = nombreLimpio;
+            }
+
+            cargarBiblioteca();
+            actualizarUI();
+            mostrarToast(`✏️ Jugada renombrada a: "${nombreLimpio}"`);
+        }
+
+        // 11. BORRAR JUGADAS
+        function borrarJugada(e, id, esOficial) {
+            e.stopPropagation(); // Evitamos cargar la jugada al borrar
+
+            const confirmar = confirm("⚠️ ¿Estás completamente seguro de que quieres eliminar esta jugada táctica de forma permanente?");
+            if (!confirmar) return;
+
+            const claveGuardado = esOficial ? 'jugadas_oficiales_escuela' : 'jugadas_personales_entrenador';
+            let listado = JSON.parse(localStorage.getItem(claveGuardado)) || [];
+            
+            listado = listado.filter(j => j.id !== id);
+            localStorage.setItem(claveGuardado, JSON.stringify(listado));
+
+            if (jugadaActivaId === id) {
+                inicializarLienzoNuevo();
+            }
+
+            cargarBiblioteca();
+            mostrarToast("🗑️ Jugada eliminada de la base de datos.");
+        }
+
+        // 12. GESTIÓN DE LA CARGA DE JUGADAS DE LA BIBLIOTECA
+        function cargarJugada(id, esOficial) {
+            if (tieneCambiosSinGuardar) {
+                const confirmar = confirm("⚠️ Tienes cambios sin guardar. ¿Quieres descartarlos para abrir esta jugada?");
+                if (!confirmar) return;
+            }
+
+            const claveGuardado = esOficial ? 'jugadas_oficiales_escuela' : 'jugadas_personales_entrenador';
+            const listado = JSON.parse(localStorage.getItem(claveGuardado)) || [];
+            const jugada = listado.find(j => j.id === id);
+
+            if (!jugada) return;
+
+            jugadaPasos = JSON.parse(JSON.stringify(jugada.pasos)); // Clonación para seguridad en la memoria
+            pasoActivoIndex = 0;
+            historialMovimientos = [];
+            jugadaActivaId = id;
+            nombreJugadaActiva = jugada.nombre;
+            esJugadaOficialActiva = esOficial;
+            tieneCambiosSinGuardar = false;
+
+            aplicarAnimacionTemporal();
+            aplicarPosicionesPantalla(jugadaPasos[0]);
+            actualizarUI();
+            mostrarToast(`📖 Jugada cargada: "${nombreJugadaActiva}"`);
+        }
+
+        // 13. ACTUALIZAR PANEL DE BIBLIOTECA
+        function cargarBiblioteca() {
+            // Mis Jugadas Personales (Entrenador)
+            const personales = JSON.parse(localStorage.getItem('jugadas_personales_entrenador')) || [];
+            listPersonal.innerHTML = "";
+            if (personales.length === 0) {
+                listPersonal.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; padding: 5px;">Ninguna jugada personal.</div>';
+            } else {
+                personales.forEach(j => {
+                    const activeClass = (jugadaActivaId === j.id) ? 'active' : '';
+                    listPersonal.innerHTML += `
+                        <div class="play-item ${activeClass}" onclick="cargarJugada('${j.id}', false)">
+                            <span>🏀 ${j.nombre}</span>
+                            <div class="play-item-actions">
+                                <button class="action-icon" title="Editar Nombre" onclick="editarNombreJugada(event, '${j.id}', false)">✏️</button>
+                                <button class="action-icon" title="Borrar" onclick="borrarJugada(event, '${j.id}', false)">🗑️</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            // Jugadas de la Escuela (Oficiales)
+            const oficiales = JSON.parse(localStorage.getItem('jugadas_oficiales_escuela')) || [];
+            listSchool.innerHTML = "";
+            if (oficiales.length === 0) {
+                listSchool.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; padding: 5px;">Ninguna jugada oficial de la escuela.</div>';
+            } else {
+                oficiales.forEach(j => {
+                    const activeClass = (jugadaActivaId === j.id) ? 'active' : '';
+                    const showActions = (rolActual === 'admin');
+                    listSchool.innerHTML += `
+                        <div class="play-item ${activeClass}" onclick="cargarJugada('${j.id}', true)">
+                            <span>🏆 ${j.nombre}</span>
+                            ${showActions ? `
+                                <div class="play-item-actions">
+                                    <button class="action-icon" title="Editar Nombre" onclick="editarNombreJugada(event, '${j.id}', true)">✏️</button>
+                                    <button class="action-icon" title="Borrar" onclick="borrarJugada(event, '${j.id}', true)">🗑️</button>
+                                </div>
+                            ` : '<div></div>'}
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // 14. COMPORTAMIENTO DINÁMICO DE INTERFAZ (UI)
+        function actualizarUI() {
+            // Títulos de control
+            playTitleDisplay.textContent = `${nombreJugadaActiva} ${tieneCambiosSinGuardar ? '*' : ''}`;
+            
+            // Botones de secuencia
+            btnPrev.disabled = (pasoActivoIndex === 0);
+            btnNext.disabled = (pasoActivoIndex === jugadaPasos.length - 1);
+            stepIndicator.textContent = `Paso: ${pasoActivoIndex + 1} / ${jugadaPasos.length}`;
+
+            // Control de Botones e Interacciones según Rol y Origen de Jugada
+            if (esJugadaOficialActiva && rolActual === 'entrenador') {
+                btnDuplicate.style.display = 'block';
+                document.querySelector('.btn-action.primary').disabled = true; // Desactiva guardar oficial para entrenador
+            } else {
+                btnDuplicate.style.display = 'none';
+                document.querySelector('.btn-action.primary').disabled = false;
+            }
+
+            // Clases visuales de tokens si es solo lectura (Oficial vista por entrenador)
+            const isReadOnly = (esJugadaOficialActiva && rolActual === 'entrenador');
+            tokens.forEach(token => {
+                token.style.cursor = isReadOnly ? 'not-allowed' : 'grab';
+            });
+        }
+
+        // 15. RED Y CONECTIVIDAD (ONLINE / OFFLINE)
+        function comprobarConectividad() {
+            function toggleStatus() {
+                const isOnline = navigator.onLine;
+                statusDot.classList.toggle('offline', !isOnline);
+                statusText.textContent = isOnline ? 'Online' : 'Offline (Local)';
+                
+                if (isOnline) {
+                    mostrarToast("📶 Conexión recuperada. Sincronización automática de datos activa.");
+                } else {
+                    mostrarToast("⚠️ Dispositivo fuera de línea. Las jugadas se guardarán de forma local.");
+                }
+            }
+
+            window.addEventListener('online', toggleStatus);
+            window.addEventListener('offline', toggleStatus);
+            toggleStatus(); // Estado inicial
+        }
+
+        // Utilitario de notificación en pantalla
+        function mostrarToast(mensaje) {
+            const toast = document.getElementById('toast');
+            toast.textContent = mensaje;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
