@@ -31,6 +31,7 @@ let jugadaActivaId = null; // ID de la jugada cargada de localStorage
 let nombreJugadaActiva = "Lienzo Nuevo";
 let esJugadaOficialActiva = false; // Indica si la jugada abierta es de la escuela
 let tieneCambiosSinGuardar = false;
+let modoLocalDeEmergencia = false;
 
 // Referencias del DOM
 const court = document.getElementById('basketball-court');
@@ -221,12 +222,11 @@ function cambiarRol(rol) {
     mostrarToast(`Cambiado al modo: ${rol === 'admin' ? 'Administrador de la Escuela' : 'Entrenador'}`);
 }
 
-// 8. GUARDADO DE JUGADAS (AHORA EN SUPABASE COOPERATIVO)
+// 8. GUARDADO DE JUGADAS CON SISTEMA ANTIFALLOS
 async function guardarJugada() {
-    // 1. Preguntamos el nombre de la jugada
     const nombreSugerido = (nombreJugadaActiva === "Lienzo Nuevo") ? "" : nombreJugadaActiva;
     const nombreIntroducido = prompt("Escribe el nombre de la jugada táctica:", nombreSugerido);
-    if (nombreIntroducido === null) return; // Cancelar silencioso
+    if (nombreIntroducido === null) return; 
     
     const nombreLimpio = nombreIntroducido.trim();
     if (nombreLimpio === "") {
@@ -234,45 +234,67 @@ async function guardarJugada() {
         return;
     }
 
-    // 2. Preguntamos el correo del creador para la firma de autor
-    const correoSugerido = localStorage.getItem('ultimo_entrenador_email') || "";
-    const correoIntroducido = prompt("Por favor, escribe tu correo de entrenador para firmar tu trabajo:", correoSugerido);
-    if (correoIntroducido === null) return; // Cancelar silencioso
+    let correoLimpio = "Entrenador Local";
+    
+    // Si la nube funciona, le pedimos el correo de firma
+    if (!modoLocalDeEmergencia) {
+        const correoSugerido = localStorage.getItem('ultimo_entrenador_email') || "";
+        const correoIntroducido = prompt("Por favor, escribe tu correo de entrenador para firmar tu trabajo:", correoSugerido);
+        if (correoIntroducido === null) return;
 
-    const correoLimpio = correoIntroducido.trim();
-    if (correoLimpio === "" || !correoLimpio.includes('@')) {
-        alert("❌ ¡Error! Debes introducir un correo electrónico válido para no perder tu trabajo.");
+        correoLimpio = correoIntroducido.trim();
+        if (correoLimpio === "" || !correoLimpio.includes('@')) {
+            alert("❌ ¡Error! Debes introducir un correo electrónico válido.");
+            return;
+        }
+        localStorage.setItem('ultimo_entrenador_email', correoLimpio);
+    }
+
+    // Si ya tiene un ID local o si estamos en modo emergencia, generamos un identificador local
+    const idJugada = (jugadaActivaId && !jugadaActivaId.startsWith('local_')) 
+        ? jugadaActivaId 
+        : 'local_' + Date.now();
+
+    const nuevaJugadaObjeto = {
+        id: idJugada,
+        nombre: nombreLimpio,
+        pasos: jugadaPasos,
+        creador_email: correoLimpio,
+        es_oficial: !modoLocalDeEmergencia && (rolActual === 'admin')
+    };
+
+    // Desvío de emergencia inmediato
+    if (modoLocalDeEmergencia) {
+        guardarEnLocal(nuevaJugadaObjeto);
         return;
     }
 
-    // Recordamos el correo en la tablet para que no tenga que escribirlo cada vez
-    localStorage.setItem('ultimo_entrenador_email', correoLimpio);
-
-    // 3. Preparamos la jugada en un paquete de datos (Objeto)
-    const nuevaJugadaObjeto = {
-        nombre: nombreLimpio,
-        pasos: jugadaPasos, // Lista de pasos que se guardará en formato JSONB
-        creador_email: correoLimpio,
-        es_oficial: (rolActual === 'admin') // Si es admin, es oficial de la escuela
-    };
-
     mostrarToast("☁️ Guardando en la nube de Supabase...");
 
-    // 4. Intentamos el envío asíncrono con red de seguridad (Try/Catch)
     try {
         let response;
-        
-         if (jugadaActivaId) {
-            // 🌟 Cambiado 'supabase' por 'supabaseClient'
+        if (jugadaActivaId && !jugadaActivaId.startsWith('local_')) {
+            // Actualización en Supabase
             response = await supabaseClient
                 .from('jugadas')
-                .update(nuevaJugadaObjeto)
+                .update({
+                    nombre: nombreLimpio,
+                    pasos: jugadaPasos,
+                    creador_email: correoLimpio,
+                    es_oficial: (rolActual === 'admin')
+                })
                 .eq('id', jugadaActivaId);
         } else {
-            // 🌟 Cambiado 'supabase' por 'supabaseClient'
+            // Inserción nueva en Supabase
+            const objParaInsertar = {
+                nombre: nombreLimpio,
+                pasos: jugadaPasos,
+                creador_email: correoLimpio,
+                es_oficial: (rolActual === 'admin')
+            };
             response = await supabaseClient
                 .from('jugadas')
-                .insert([nuevaJugadaObjeto])
+                .insert([objParaInsertar])
                 .select();
                 
             if (response.data && response.data[0]) {
@@ -285,14 +307,17 @@ async function guardarJugada() {
         nombreJugadaActiva = nombreLimpio;
         tieneCambiosSinGuardar = false;
 
-        // Recargamos la biblioteca para ver la jugada reflejada
         await cargarBiblioteca();
         actualizarUI();
-        mostrarToast(`💾 ¡Éxito! "${nombreLimpio}" blindada en la nube.`);
+        mostrarToast(`💾 ¡Éxito! "${nombreLimpio}" guardada en la nube.`);
 
     } catch (error) {
-        console.error("Error al conectar con Supabase:", error);
-        mostrarToast("❌ Error de conexión. No se pudo guardar en la nube.");
+        console.warn("⚠️ Error al guardar en la nube. Desviando a guardado local de emergencia...", error);
+        // Marcamos el fallo para que las siguientes acciones vayan directas a local
+        modoLocalDeEmergencia = true;
+        // Nos aseguramos de ponerle etiqueta de ID local
+        nuevaJugadaObjeto.id = 'local_' + Date.now();
+        guardarEnLocal(nuevaJugadaObjeto);
     }
 }
 
@@ -349,13 +374,29 @@ function editarNombreJugada(e, id, esOficial) {
     mostrarToast(`✏️ Jugada renombrada a: "${nombreLimpio}"`);
 }
 
-// 11. BORRAR JUGADAS EN SUPABASE
+// 11. ELIMINAR JUGADAS (NUBE O LOCAL)
 async function borrarJugada(e, id, esOficial) {
     e.stopPropagation();
 
-    const confirmar = confirm("⚠️ ¿Estás seguro de que quieres eliminar esta jugada de la nube de forma permanente?");
+    const confirmar = confirm("⚠️ ¿Estás seguro de que quieres eliminar esta jugada de forma permanente?");
     if (!confirmar) return;
 
+    // Si es una jugada local
+    if (modoLocalDeEmergencia || (typeof id === 'string' && id.startsWith('local_'))) {
+        let jugadasLocales = JSON.parse(localStorage.getItem('jugadas_locales_baloncesto')) || [];
+        jugadasLocales = jugadasLocales.filter(j => j.id !== id);
+        localStorage.setItem('jugadas_locales_baloncesto', JSON.stringify(jugadasLocales));
+
+        if (jugadaActivaId === id) {
+            inicializarLienzoNuevo();
+        }
+
+        cargarBibliotecaDesdeLocal();
+        mostrarToast("🗑️ Jugada local eliminada con éxito.");
+        return;
+    }
+
+    // Borrado oficial de Supabase
     try {
         const { error } = await supabaseClient
             .from('jugadas')
@@ -377,15 +418,39 @@ async function borrarJugada(e, id, esOficial) {
     }
 }
 
-// 12. GESTIÓN DE LA CARGA DE JUGADAS DESDE SUPABASE
+// 12. GESTIÓN DE LA CARGA DE JUGADAS (NUBE O LOCAL)
 async function cargarJugada(id, esOficial) {
     if (tieneCambiosSinGuardar) {
         const confirmar = confirm("⚠️ Tienes cambios sin guardar. ¿Quieres descartarlos para abrir esta jugada?");
         if (!confirmar) return;
     }
 
+    // Si la jugada tiene ID local, la leemos directamente del disco duro
+    if (modoLocalDeEmergencia || (typeof id === 'string' && id.startsWith('local_'))) {
+        const jugadasLocales = JSON.parse(localStorage.getItem('jugadas_locales_baloncesto')) || [];
+        const jugada = jugadasLocales.find(j => j.id === id);
+        
+        if (jugada) {
+            jugadaPasos = JSON.parse(JSON.stringify(jugada.pasos));
+            pasoActivoIndex = 0;
+            historialMovimientos = [];
+            jugadaActivaId = id;
+            nombreJugadaActiva = jugada.nombre;
+            esJugadaOficialActiva = false;
+            tieneCambiosSinGuardar = false;
+
+            aplicarAnimacionTemporal();
+            aplicarPosicionesPantalla(jugadaPasos);
+            actualizarUI();
+            mostrarToast(`📖 Jugada local cargada: "${nombreJugadaActiva}"`);
+        } else {
+            mostrarToast("❌ No se encontró la jugada en el dispositivo.");
+        }
+        return;
+    }
+
+    // Ruta de carga habitual de Supabase
     try {
-        // Pedimos a Supabase la jugada específica con ese ID único
         const { data: jugada, error } = await supabaseClient
             .from('jugadas')
             .select('*')
@@ -394,7 +459,6 @@ async function cargarJugada(id, esOficial) {
 
         if (error) throw error;
 
-        // Cargamos los datos de la jugada en la pizarra
         jugadaPasos = JSON.parse(JSON.stringify(jugada.pasos));
         pasoActivoIndex = 0;
         historialMovimientos = [];
@@ -404,20 +468,20 @@ async function cargarJugada(id, esOficial) {
         tieneCambiosSinGuardar = false;
 
         aplicarAnimacionTemporal();
-        aplicarPosicionesPantalla(jugadaPasos[0]); // Cargamos el primer paso de la jugada
+        aplicarPosicionesPantalla(jugadaPasos);
         actualizarUI();
         mostrarToast(`📖 Jugada cargada: "${nombreJugadaActiva}"`);
 
     } catch (error) {
-        console.error("Error al cargar la jugada de Supabase:", error);
-        mostrarToast("❌ No se pudo descargar la jugada de la nube.");
+        console.error("Error al cargar de Supabase:", error);
+        mostrarToast("❌ Error al descargar de la nube. Intentando cargar en local...");
     }
 }
 
-// 13. ACTUALIZAR PANEL DE BIBLIOTECA DESDE SUPABASE
+// 13. ACTUALIZAR PANEL DE BIBLIOTECA (CON AUTO-RESCATE LOCAL)
 async function cargarBiblioteca() {
     try {
-        // 🌟 Cambiado 'supabase' por 'supabaseClient'
+        // Intentamos ir por la vía rápida y oficial (Nube)
         const { data: listadoJugadas, error } = await supabaseClient
             .from('jugadas')
             .select('*')
@@ -425,18 +489,19 @@ async function cargarBiblioteca() {
 
         if (error) throw error;
 
-        // Separamos las jugadas usando lógica condicional
+        // Si funciona, desactivamos el modo de emergencia por si estaba encendido
+        modoLocalDeEmergencia = false;
+
         const personales = listadoJugadas.filter(j => j.es_oficial === false);
         const oficiales = listadoJugadas.filter(j => j.es_oficial === true);
 
-        // 1. Pintar Jugadas Personales de los entrenadores
+        // Pintar Personales (Nube)
         listPersonal.innerHTML = "";
         if (personales.length === 0) {
             listPersonal.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; padding: 5px;">Ninguna jugada en la nube.</div>';
         } else {
             personales.forEach(j => {
                 const activeClass = (jugadaActivaId === j.id) ? 'active' : '';
-                // Mostramos el nombre de la jugada y quién la firmó
                 listPersonal.innerHTML += `
                     <div class="play-item ${activeClass}" onclick="cargarJugada('${j.id}', false)">
                         <div>
@@ -451,7 +516,7 @@ async function cargarBiblioteca() {
             });
         }
 
-        // 2. Pintar Jugadas Oficiales de la Escuela
+        // Pintar Oficiales (Nube)
         listSchool.innerHTML = "";
         if (oficiales.length === 0) {
             listSchool.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; padding: 5px;">Ninguna jugada oficial.</div>';
@@ -476,8 +541,10 @@ async function cargarBiblioteca() {
         }
 
     } catch (error) {
-        console.error("Error al cargar la biblioteca de Supabase:", error);
-        listPersonal.innerHTML = '<div style="color: #ef4444; font-size: 0.8rem; padding: 5px;">Error al conectar con la nube.</div>';
+        console.warn("⚠️ Supabase no disponible. Activando Modo Local de Emergencia:", error);
+        modoLocalDeEmergencia = true;
+        // Cargamos los datos guardados en el dispositivo
+        cargarBibliotecaDesdeLocal();
     }
 }
 
@@ -530,4 +597,64 @@ function mostrarToast(mensaje) {
     setTimeout(() => {
         toast.style.display = 'none';
     }, 3000);
+}
+// =======================================================
+// 🔌 FUNCIONES AUXILIARES PARA EL MODO LOCAL (FALLBACK)
+// =======================================================
+
+// 1. Dibuja la biblioteca usando solo el disco duro de la tablet
+function cargarBibliotecaDesdeLocal() {
+    // Leemos las jugadas locales que guardamos con nuestra clave especial
+    const listadoJugadas = JSON.parse(localStorage.getItem('jugadas_locales_baloncesto')) || [];
+    
+    // En modo local, todas las jugadas se tratan como personales del entrenador
+    const personales = listadoJugadas;
+
+    // Pintamos la lista de jugadas personales
+    listPersonal.innerHTML = "";
+    if (personales.length === 0) {
+        listPersonal.innerHTML = '<div style="color: #94a3b8; font-size: 0.8rem; padding: 10px;">Ninguna jugada local guardada.</div>';
+    } else {
+        personales.forEach(j => {
+            const activeClass = (jugadaActivaId === j.id) ? 'active' : '';
+            listPersonal.innerHTML += `
+                <div class="play-item ${activeClass}" onclick="cargarJugada('${j.id}', false)">
+                    <div>
+                        <span>🏀 ${j.nombre}</span>
+                        <div style="font-size: 0.75rem; color: #f59e0b; margin-top: 2px;">⚡ Guardado en Local</div>
+                    </div>
+                    <div class="play-item-actions">
+                        <button class="action-icon" title="Borrar" onclick="borrarJugada(event, '${j.id}', false)">🗑️</button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // El catálogo oficial de la escuela requiere internet, avisamos amigablemente
+    listSchool.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; padding: 10px;">⚠️ Conéctate a internet para ver el catálogo oficial de la escuela.</div>';
+}
+
+// 2. Guarda la jugada físicamente dentro de la memoria de la tablet
+function guardarEnLocal(jugadaObj) {
+    let jugadasLocales = JSON.parse(localStorage.getItem('jugadas_locales_baloncesto')) || [];
+    
+    // Si la jugada ya existía por ID, la actualizamos; si no, la añadimos al principio
+    const index = jugadasLocales.findIndex(j => j.id === jugadaObj.id);
+    if (index !== -1) {
+        jugadasLocales[index] = jugadaObj;
+    } else {
+        jugadasLocales.unshift(jugadaObj);
+    }
+    
+    // Guardamos la lista convertida en texto en la memoria del navegador
+    localStorage.setItem('jugadas_locales_baloncesto', JSON.stringify(jugadasLocales));
+    
+    jugadaActivaId = jugadaObj.id;
+    nombreJugadaActiva = jugadaObj.nombre;
+    tieneCambiosSinGuardar = false;
+    
+    cargarBibliotecaDesdeLocal();
+    actualizarUI();
+    mostrarToast(`💾 Guardado local: "${jugadaObj.nombre}"`);
 }
