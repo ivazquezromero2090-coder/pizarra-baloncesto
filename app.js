@@ -1,3 +1,12 @@
+// ==========================================
+// ☁️ CONFIGURACIÓN Y CONEXIÓN CON SUPABASE
+// ==========================================
+const SUPABASE_URL = "https://TU_PROJECT_URL_AQUÍ.supabase.co"; 
+const SUPABASE_ANON_KEY = "TU_API_KEY_PUBLICA_AQUÍ";
+
+// Creamos el intérprete oficial que hablará con tu base de datos
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 // Coordenadas Iniciales por Defecto de las 11 fichas
 const POSICIONES_INICIALES = {
     'token-a1': { x: 42, y: 50 },
@@ -212,16 +221,11 @@ function cambiarRol(rol) {
     mostrarToast(`Cambiado al modo: ${rol === 'admin' ? 'Administrador de la Escuela' : 'Entrenador'}`);
 }
 
-// 8. GUARDADO DE JUGADAS
-function guardarJugada() {
-    if (esJugadaOficialActiva && rolActual === 'entrenador') {
-        mostrarToast("No tienes autorización para editar jugadas oficiales.");
-        return;
-    }
-
+// 8. GUARDADO DE JUGADAS (AHORA EN SUPABASE COOPERATIVO)
+async function guardarJugada() {
+    // 1. Preguntamos el nombre de la jugada
     const nombreSugerido = (nombreJugadaActiva === "Lienzo Nuevo") ? "" : nombreJugadaActiva;
     const nombreIntroducido = prompt("Escribe el nombre de la jugada táctica:", nombreSugerido);
-    
     if (nombreIntroducido === null) return; // Cancelar silencioso
     
     const nombreLimpio = nombreIntroducido.trim();
@@ -230,41 +234,65 @@ function guardarJugada() {
         return;
     }
 
+    // 2. Preguntamos el correo del creador para la firma de autor
+    const correoSugerido = localStorage.getItem('ultimo_entrenador_email') || "";
+    const correoIntroducido = prompt("Por favor, escribe tu correo de entrenador para firmar tu trabajo:", correoSugerido);
+    if (correoIntroducido === null) return; // Cancelar silencioso
+
+    const correoLimpio = correoIntroducido.trim();
+    if (correoLimpio === "" || !correoLimpio.includes('@')) {
+        alert("❌ ¡Error! Debes introducir un correo electrónico válido para no perder tu trabajo.");
+        return;
+    }
+
+    // Recordamos el correo en la tablet para que no tenga que escribirlo cada vez
+    localStorage.setItem('ultimo_entrenador_email', correoLimpio);
+
+    // 3. Preparamos la jugada en un paquete de datos (Objeto)
     const nuevaJugadaObjeto = {
-        id: jugadaActivaId || Date.now().toString(),
         nombre: nombreLimpio,
-        pasos: jugadaPasos
+        pasos: jugadaPasos, // Lista de pasos que se guardará en formato JSONB
+        creador_email: correoLimpio,
+        es_oficial: (rolActual === 'admin') // Si es admin, es oficial de la escuela
     };
 
-    const esOnline = navigator.onLine;
-    let claveGuardado = 'jugadas_personales_entrenador';
+    mostrarToast("☁️ Guardando en la nube de Supabase...");
 
-    if (rolActual === 'admin') {
-        claveGuardado = 'jugadas_oficiales_escuela';
-    }
+    // 4. Intentamos el envío asíncrono con red de seguridad (Try/Catch)
+    try {
+        let response;
+        
+        if (jugadaActivaId) {
+            // Si ya tiene ID, actualizamos la jugada existente en la nube
+            response = await supabase
+                .from('jugadas')
+                .update(nuevaJugadaObjeto)
+                .eq('id', jugadaActivaId);
+        } else {
+            // Si es nueva, la insertamos y Supabase nos devolverá el ID único generado
+            response = await supabase
+                .from('jugadas')
+                .insert([nuevaJugadaObjeto])
+                .select();
+                
+            if (response.data && response.data[0]) {
+                jugadaActivaId = response.data[0].id; // Asignamos el UUID real
+            }
+        }
 
-    let listado = JSON.parse(localStorage.getItem(claveGuardado)) || [];
-    const indexExistente = listado.findIndex(j => j.id === nuevaJugadaObjeto.id);
-    
-    if (indexExistente >= 0) {
-        listado[indexExistente] = nuevaJugadaObjeto;
-    } else {
-        listado.push(nuevaJugadaObjeto);
-    }
+        if (response.error) throw response.error;
 
-    localStorage.setItem(claveGuardado, JSON.stringify(listado));
+        nombreJugadaActiva = nombreLimpio;
+        tieneCambiosSinGuardar = false;
 
-    jugadaActivaId = nuevaJugadaObjeto.id;
-    nombreJugadaActiva = nuevaJugadaObjeto.nombre;
-    tieneCambiosSinGuardar = false;
+        // Recargamos la biblioteca para ver la jugada reflejada
+        await cargarBiblioteca();
+        actualizarUI();
+        mostrarToast(`💾 ¡Éxito! "${nombreLimpio}" blindada en la nube.`);
 
-    cargarBiblioteca();
-    actualizarUI();
-
-    if (esOnline) {
-        mostrarToast(`☁️ Jugada "${nombreLimpio}" guardada en la nube con éxito.`);
-    } else {
-        mostrarToast(`💾 Sin cobertura. "${nombreLimpio}" guardada en tu tablet.`);
+    } catch (error) {
+        console.error("Error al conectar con Supabase:", error);
+        mostrarToast("❌ Error de conexión. No se pudo guardar en la nube.");
     }
 }
 
@@ -321,97 +349,135 @@ function editarNombreJugada(e, id, esOficial) {
     mostrarToast(`✏️ Jugada renombrada a: "${nombreLimpio}"`);
 }
 
-// 11. BORRAR JUGADAS
-function borrarJugada(e, id, esOficial) {
+// 11. BORRAR JUGADAS EN SUPABASE
+async function borrarJugada(e, id, esOficial) {
     e.stopPropagation();
 
-    const confirmar = confirm("⚠️ ¿Estás seguro de que quieres eliminar esta jugada de forma permanente?");
+    const confirmar = confirm("⚠️ ¿Estás seguro de que quieres eliminar esta jugada de la nube de forma permanente?");
     if (!confirmar) return;
 
-    const claveGuardado = esOficial ? 'jugadas_oficiales_escuela' : 'jugadas_personales_entrenador';
-    let listado = JSON.parse(localStorage.getItem(claveGuardado)) || [];
-    
-    listado = listado.filter(j => j.id !== id);
-    localStorage.setItem(claveGuardado, JSON.stringify(listado));
+    try {
+        const { error } = await supabase
+            .from('jugadas')
+            .delete()
+            .eq('id', id);
 
-    if (jugadaActivaId === id) {
-        inicializarLienzoNuevo();
+        if (error) throw error;
+
+        if (jugadaActivaId === id) {
+            inicializarLienzoNuevo();
+        }
+
+        await cargarBiblioteca();
+        mostrarToast("🗑️ Jugada eliminada de la nube con éxito.");
+
+    } catch (error) {
+        console.error("Error al borrar en Supabase:", error);
+        mostrarToast("❌ No tienes permisos o falló la conexión al borrar.");
     }
-
-    cargarBiblioteca();
-    mostrarToast("🗑️ Jugada eliminada de la base de datos.");
 }
 
-// 12. GESTIÓN DE LA CARGA DE JUGADAS DE LA BIBLIOTECA
-function cargarJugada(id, esOficial) {
+// 12. GESTIÓN DE LA CARGA DE JUGADAS DESDE SUPABASE
+async function cargarJugada(id, esOficial) {
     if (tieneCambiosSinGuardar) {
         const confirmar = confirm("⚠️ Tienes cambios sin guardar. ¿Quieres descartarlos para abrir esta jugada?");
         if (!confirmar) return;
     }
 
-    const claveGuardado = esOficial ? 'jugadas_oficiales_escuela' : 'jugadas_personales_entrenador';
-    const listado = JSON.parse(localStorage.getItem(claveGuardado)) || [];
-    const jugada = listado.find(j => j.id === id);
+    try {
+        // Pedimos a Supabase la jugada específica con ese ID único
+        const { data: jugada, error } = await supabase
+            .from('jugadas')
+            .select('*')
+            .eq('id', id)
+            .single();
 
-    if (!jugada) return;
+        if (error) throw error;
 
-    jugadaPasos = JSON.parse(JSON.stringify(jugada.pasos));
-    pasoActivoIndex = 0;
-    historialMovimientos = [];
-    jugadaActivaId = id;
-    nombreJugadaActiva = jugada.nombre;
-    esJugadaOficialActiva = esOficial;
-    tieneCambiosSinGuardar = false;
+        // Cargamos los datos de la jugada en la pizarra
+        jugadaPasos = JSON.parse(JSON.stringify(jugada.pasos));
+        pasoActivoIndex = 0;
+        historialMovimientos = [];
+        jugadaActivaId = id;
+        nombreJugadaActiva = jugada.nombre;
+        esJugadaOficialActiva = esOficial;
+        tieneCambiosSinGuardar = false;
 
-    aplicarAnimacionTemporal();
-    aplicarPosicionesPantalla(jugadaPasos[0]);
-    actualizarUI();
-    mostrarToast(`📖 Jugada cargada: "${nombreJugadaActiva}"`);
+        aplicarAnimacionTemporal();
+        aplicarPosicionesPantalla(jugadaPasos[0]); // Cargamos el primer paso de la jugada
+        actualizarUI();
+        mostrarToast(`📖 Jugada cargada: "${nombreJugadaActiva}"`);
+
+    } catch (error) {
+        console.error("Error al cargar la jugada de Supabase:", error);
+        mostrarToast("❌ No se pudo descargar la jugada de la nube.");
+    }
 }
 
-// 13. ACTUALIZAR PANEL DE BIBLIOTECA
-function cargarBiblioteca() {
-    // Jugadas Personales
-    const personales = JSON.parse(localStorage.getItem('jugadas_personales_entrenador')) || [];
-    listPersonal.innerHTML = "";
-    if (personales.length === 0) {
-        listPersonal.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; padding: 5px;">Ninguna jugada personal.</div>';
-    } else {
-        personales.forEach(j => {
-            const activeClass = (jugadaActivaId === j.id) ? 'active' : '';
-            listPersonal.innerHTML += `
-                <div class="play-item ${activeClass}" onclick="cargarJugada('${j.id}', false)">
-                    <span>🏀 ${j.nombre}</span>
-                    <div class="play-item-actions">
-                        <button class="action-icon" title="Editar Nombre" onclick="editarNombreJugada(event, '${j.id}', false)">✏️</button>
-                        <button class="action-icon" title="Borrar" onclick="borrarJugada(event, '${j.id}', false)">🗑️</button>
-                    </div>
-                </div>
-            `;
-        });
-    }
+// 13. ACTUALIZAR PANEL DE BIBLIOTECA DESDE SUPABASE
+async function cargarBiblioteca() {
+    try {
+        // Consultamos a Supabase para traernos todas las jugadas del servidor
+        const { data: listadoJugadas, error } = await supabase
+            .from('jugadas')
+            .select('*')
+            .order('created_at', { ascending: false });
 
-    // Jugadas Oficiales de la Escuela
-    const oficiales = JSON.parse(localStorage.getItem('jugadas_oficiales_escuela')) || [];
-    listSchool.innerHTML = "";
-    if (oficiales.length === 0) {
-        listSchool.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; padding: 5px;">Ninguna jugada oficial de la escuela.</div>';
-    } else {
-        oficiales.forEach(j => {
-            const activeClass = (jugadaActivaId === j.id) ? 'active' : '';
-            const showActions = (rolActual === 'admin');
-            listSchool.innerHTML += `
-                <div class="play-item ${activeClass}" onclick="cargarJugada('${j.id}', true)">
-                    <span>🏆 ${j.nombre}</span>
-                    ${showActions ? `
-                        <div class="play-item-actions">
-                            <button class="action-icon" title="Editar Nombre" onclick="editarNombreJugada(event, '${j.id}', true)">✏️</button>
-                            <button class="action-icon" title="Borrar" onclick="borrarJugada(event, '${j.id}', true)">🗑️</button>
+        if (error) throw error;
+
+        // Separamos las jugadas usando lógica condicional
+        const personales = listadoJugadas.filter(j => j.es_oficial === false);
+        const oficiales = listadoJugadas.filter(j => j.es_oficial === true);
+
+        // 1. Pintar Jugadas Personales de los entrenadores
+        listPersonal.innerHTML = "";
+        if (personales.length === 0) {
+            listPersonal.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; padding: 5px;">Ninguna jugada en la nube.</div>';
+        } else {
+            personales.forEach(j => {
+                const activeClass = (jugadaActivaId === j.id) ? 'active' : '';
+                // Mostramos el nombre de la jugada y quién la firmó
+                listPersonal.innerHTML += `
+                    <div class="play-item ${activeClass}" onclick="cargarJugada('${j.id}', false)">
+                        <div>
+                            <span>🏀 ${j.nombre}</span>
+                            <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px;">Por: ${j.creador_email}</div>
                         </div>
-                    ` : '<div></div>'}
-                </div>
-            `;
-        });
+                        <div class="play-item-actions">
+                            <button class="action-icon" title="Borrar" onclick="borrarJugada(event, '${j.id}', false)">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // 2. Pintar Jugadas Oficiales de la Escuela
+        listSchool.innerHTML = "";
+        if (oficiales.length === 0) {
+            listSchool.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; padding: 5px;">Ninguna jugada oficial.</div>';
+        } else {
+            oficiales.forEach(j => {
+                const activeClass = (jugadaActivaId === j.id) ? 'active' : '';
+                const showActions = (rolActual === 'admin');
+                listSchool.innerHTML += `
+                    <div class="play-item ${activeClass}" onclick="cargarJugada('${j.id}', true)">
+                        <div>
+                            <span>🏆 ${j.nombre}</span>
+                            <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px;">Oficial Escuela</div>
+                        </div>
+                        ${showActions ? `
+                            <div class="play-item-actions">
+                                <button class="action-icon" title="Borrar" onclick="borrarJugada(event, '${j.id}', true)">🗑️</button>
+                            </div>
+                        ` : '<div></div>'}
+                    </div>
+                `;
+            });
+        }
+
+    } catch (error) {
+        console.error("Error al cargar la biblioteca de Supabase:", error);
+        listPersonal.innerHTML = '<div style="color: #ef4444; font-size: 0.8rem; padding: 5px;">Error al conectar con la nube.</div>';
     }
 }
 
