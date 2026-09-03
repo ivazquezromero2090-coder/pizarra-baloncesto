@@ -1,11 +1,11 @@
 // ==========================================
 // ☁️ CONFIGURACIÓN Y CONEXIÓN CON SUPABASE
 // ==========================================
-const SUPABASE_URL = "https://hlrlyyvddvtbvmzariuf.supabase.co"; 
-const SUPABASE_ANON_KEY = "sb_publishable_X-hpA6s1Zeo7aLpT608fIQ_ig_qB0Ie";
+const SUPABASE_URL = "https://TU_PROJECT_URL_AQUÍ.supabase.co"; 
+const SUPABASE_ANON_KEY = "TU_API_KEY_PUBLICA_AQUÍ";
 
-// Creamos el intérprete oficial que hablará con tu base de datos
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// 🌟 Renombramos a 'supabaseClient' para evitar que choque con el CDN
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Coordenadas Iniciales por Defecto de las 11 fichas
 const POSICIONES_INICIALES = {
@@ -262,21 +262,21 @@ async function guardarJugada() {
     try {
         let response;
         
-        if (jugadaActivaId) {
-            // Si ya tiene ID, actualizamos la jugada existente en la nube
-            response = await supabase
+         if (jugadaActivaId) {
+            // 🌟 Cambiado 'supabase' por 'supabaseClient'
+            response = await supabaseClient
                 .from('jugadas')
                 .update(nuevaJugadaObjeto)
                 .eq('id', jugadaActivaId);
         } else {
-            // Si es nueva, la insertamos y Supabase nos devolverá el ID único generado
-            response = await supabase
+            // 🌟 Cambiado 'supabase' por 'supabaseClient'
+            response = await supabaseClient
                 .from('jugadas')
                 .insert([nuevaJugadaObjeto])
                 .select();
                 
             if (response.data && response.data[0]) {
-                jugadaActivaId = response.data[0].id; // Asignamos el UUID real
+                jugadaActivaId = response.data[0].id;
             }
         }
 
@@ -357,7 +357,7 @@ async function borrarJugada(e, id, esOficial) {
     if (!confirmar) return;
 
     try {
-        const { error } = await supabase
+        const { error } = await supabaseClient
             .from('jugadas')
             .delete()
             .eq('id', id);
@@ -386,7 +386,7 @@ async function cargarJugada(id, esOficial) {
 
     try {
         // Pedimos a Supabase la jugada específica con ese ID único
-        const { data: jugada, error } = await supabase
+        const { data: jugada, error } = await supabaseClient
             .from('jugadas')
             .select('*')
             .eq('id', id)
@@ -417,8 +417,8 @@ async function cargarJugada(id, esOficial) {
 // 13. ACTUALIZAR PANEL DE BIBLIOTECA DESDE SUPABASE
 async function cargarBiblioteca() {
     try {
-        // Consultamos a Supabase para traernos todas las jugadas del servidor
-        const { data: listadoJugadas, error } = await supabase
+        // 🌟 Cambiado 'supabase' por 'supabaseClient'
+        const { data: listadoJugadas, error } = await supabaseClient
             .from('jugadas')
             .select('*')
             .order('created_at', { ascending: false });
