@@ -248,25 +248,30 @@ body {
     animation: fadeIn 0.3s ease;
 }
 
-/* La Cancha */
-.court-container {
-    flex: 1;
+/* 🪵 APLICAMOS EL PARQUÉ EN TU CONTENEDOR REAL */
+.court-container { 
     position: relative;
-    background-color: #1e293b;
-    border: 4px solid #f8fafc;
-    border-radius: 12px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
-    touch-action: none;
+    width: 100%;
+    height: 100%;
+    background-color: #e5c185; /* Tono madera */
+    background-image: 
+        linear-gradient(90deg, rgba(94, 59, 21, 0.12) 1px, transparent 1px),
+        linear-gradient(0deg, rgba(94, 59, 21, 0.12) 1px, transparent 1px),
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.15) 0%, rgba(0, 0, 0, 0.08) 100%);
+    background-size: 90px 100%, 100% 24px, 100% 100%;
+    border: 4px solid #5e3b15;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
     overflow: hidden;
 }
 
-.court-lines {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
+/* 🎨 LAS LÍNEAS DE JUEGO ADAPTADAS A TU CLASE */
+.court-lines line, .court-lines circle, .court-lines path, .court-lines rect {
+    stroke: rgba(255, 255, 255, 0.65) !important; /* Blanco satinado semitransparente */
+    stroke-width: 2px;
+}
+
+.court-lines polygon, .court-lines path {
+    fill: rgba(255, 255, 255, 0.05) !important; /* Relleno sutil para las zonas */
 }
 
 /* =======================================================================
