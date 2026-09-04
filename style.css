@@ -308,19 +308,18 @@ body {
                 inset 0 -2px 4px rgba(0, 0, 0, 0.3);
 }
 
-/* 🏀 EL BALÓN INDEPENDIENTE CON TEXTURA DE CUERO */
+/* 🏀 EL BALÓN: GRANDE, REDONDO Y CON RELIEVE */
 .token.ball {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    /* 🍊 Gradiente naranja que imita la luz directa reflejada */
+    width: 48px;  /* 🌟 Ambos valores deben ser idénticos para evitar deformaciones */
+    height: 48px; 
+    border-radius: 50%; /* Fuerza el círculo perfecto */
     background: radial-gradient(circle at 35% 35%, #ff922b, #d9480f);
-    border: 1.5px solid #000000; /* Las costuras oscuras del balón */
+    border: 1.5px solid #000000;
     cursor: grab;
     position: absolute;
-    z-index: 20; /* El balón SIEMPRE vuela por encima de las cabezas de los jugadores */
+    z-index: 20;
     
-    /* 🌟 Fusión de deslizamiento (top/left) y elevación (transform/shadow) */
+    /* 🕒 Transición por defecto para cuando se mueva solo entre pasos */
     transition: top 0.5s ease-in-out, 
                 left 0.5s ease-in-out, 
                 transform 0.2s ease, 
@@ -402,4 +401,14 @@ body {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+/* ⚡ QUITAR RETARDO EN ARRASTRE (APAGAR CORREA ELÁSTICA EN TIEMPO REAL) */
+.token:active, .token.dragging,
+.token.ball:active, .token.ball.dragging {
+    /* 🌟 Al poner 'none' en top y left, eliminamos el retardo y la ficha va al milímetro con el dedo */
+    transition: top 0s, 
+                left 0s, 
+                transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                box-shadow 0.2s ease;
 }
