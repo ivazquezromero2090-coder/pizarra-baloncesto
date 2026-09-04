@@ -269,58 +269,74 @@ body {
     pointer-events: none;
 }
 
-/* Fichas Tácticas */
+/* 👤 EL CONTENEDOR BASE DE CADA JUGADOR (EN REPOSO) */
 .token {
-    position: absolute;
-    width: 4.5%;
-    aspect-ratio: 1 / 1;
-    border-radius: 50%;
+    width: 46px;
+    height: 46px;
+    border-radius: 50%; /* Fuerza un círculo perfecto */
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    font-size: 1.2vw;
-    color: #ffffff;
-    cursor: grab;
-    user-select: none;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-    transform: translate(-50%, -50%);
-    touch-action: none;
-    z-index: 2;
+    color: white;
+    cursor: grab; /* Indica que se puede agarrar con el dedo */
+    user-select: none; /* Evita que se seleccione el número al arrastrar */
+    position: absolute;
+    z-index: 10; /* Se dibuja por encima del dibujo de la cancha */
+    
+    /* 🕒 EL MUELLE ELÁSTICO (TRANSICIÓN):
+       Hace que al tocar la ficha se agrande suavemente en 0.2 segundos */
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                box-shadow 0.2s ease;
 }
 
-/* Clase de animación para transiciones suaves */
-.animate-transition {
-    transition: left 0.6s ease-in-out, top 0.6s ease-in-out;
-}
-
-@media (min-width: 950px) {
-    .token { font-size: 12px; }
-}
-
+/* 🔴 EQUIPO ROJO (ATACANTES): Gradiente esférico rojo y sombra base */
 .token.attack {
-    background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
-    border: 2px solid #e0f2fe;
+    background: radial-gradient(circle at 30% 30%, #ff6b6b, #c92a2a);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 
+                inset 0 -2px 4px rgba(0, 0, 0, 0.3); /* Alumbra la parte inferior */
 }
 
+/* 🔵 EQUIPO AZUL (DEFENSORES): Gradiente esférico azul y sombra base */
 .token.defense {
-    background: radial-gradient(circle, #f87171 0%, #dc2626 100%);
-    border: 2px solid #fee2e2;
+    background: radial-gradient(circle at 30% 30%, #4dadf7, #1864ab);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 
+                inset 0 -2px 4px rgba(0, 0, 0, 0.3);
 }
 
+/* 🏀 EL BALÓN INDEPENDIENTE CON TEXTURA DE CUERO */
 .token.ball {
-    width: 4.5%; /* Balón del mismo tamaño que los jugadores */
-    background: radial-gradient(circle, #f97316 0%, #ea580c 100%);
-    border: 1px solid #ffedd5;
-    z-index: 10;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    /* 🍊 Gradiente naranja que imita la luz directa reflejada */
+    background: radial-gradient(circle at 35% 35%, #ff922b, #d9480f);
+    border: 1.5px solid #000000; /* Las costuras oscuras del balón */
+    cursor: grab;
+    position: absolute;
+    z-index: 20; /* El balón SIEMPRE vuela por encima de las cabezas de los jugadores */
+    
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5),
+                inset 0 -1.5px 3px rgba(0, 0, 0, 0.4);
 }
 
-.token:active {
-    cursor: grabbing;
-    transform: translate(-50%, -50%) scale(1.2);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-    z-index: 20;
+/* 🚀 EFECTO ELEVADO: SE ACTIVA AL AGARRAR UNA FICHA CON EL DEDO (CLASE .DRAGGING O TOQUE) */
+.token:active, .token.dragging,
+.token.ball:active, .token.ball.dragging {
+    cursor: grabbing; /* Cambia a mano cerrada de "sujeción" */
+    
+    /* 📈 Elevamos la ficha haciéndola un 15% más grande */
+    transform: scale(1.15); 
+    
+    /* 👑 Prioridad absoluta: evita que pase por debajo de otros jugadores quietos */
+    z-index: 100; 
+
+    /* 👥 Sombra aérea: se aleja 10px y se difumina 15px en el suelo */
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.35), 
+                inset 0 -2px 4px rgba(0, 0, 0, 0.2);
 }
+
 
 /* ==========================================
    4. LÍNEA DE TIEMPO (BARRA INFERIOR)
