@@ -269,11 +269,15 @@ body {
     pointer-events: none;
 }
 
-/* Fichas Tácticas */
+/* =======================================================================
+   🏀 SECCIÓN: FICHAS TÁCTICAS (ESTILO 3D SEGURO Y ALTO RENDIMIENTO)
+   ======================================================================= */
+
+/* 👤 1. CONTENEDOR BASE DE LAS FICHAS (JUGADORES Y BALÓN) */
 .token {
     position: absolute;
-    width: 4.5%;
-    aspect-ratio: 1 / 1;
+    width: 4.5%; /* Tamaño proporcional a la cancha */
+    aspect-ratio: 1 / 1; /* 📐 El guardián geométrico: asegura círculos perfectos */
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -283,13 +287,23 @@ body {
     color: #ffffff;
     cursor: grab;
     user-select: none;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
-    transform: translate(-50%, -50%);
     touch-action: none;
     z-index: 2;
+    
+    /* 🎯 BRÚJULA DE CENTRADO: Alinea el centro de la ficha exactamente con tu dedo */
+    transform: translate(-50%, -50%);
+    
+    /* 👥 RELIEVE 3D EN REPOSO: Sombra proyectada exterior y sombra interna de volumen */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.35),
+                inset 0 -3px 5px rgba(0, 0, 0, 0.3);
+                
+    /* Solo animamos cambios visuales de sombra y contorno (0.2s rápidos).
+       ¡NUNCA animamos 'top' ni 'left' aquí para evitar retardos al arrastrar! */
+    transition: box-shadow 0.2s ease;
 }
 
-/* Clase de animación para transiciones suaves */
+/* 🎬 CLASE DE ANIMACIÓN DINÁMICA (CONTROLADA POR JAVASCRIPT)
+   Se activa únicamente cuando las fichas viajan solas entre fases de la jugada */
 .animate-transition {
     transition: left 0.6s ease-in-out, top 0.6s ease-in-out;
 }
@@ -298,28 +312,46 @@ body {
     .token { font-size: 12px; }
 }
 
+/* =======================================================================
+   🎨 2. PALETA DE COLORES EN 3D REALISTA (TUS COLORES ORIGINALES)
+   ======================================================================= */
+
+/* 🔵 EQUIPO ATACANTE: Gradiente esférico azul con borde luminoso celeste */
 .token.attack {
-    background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
+    background: radial-gradient(circle at 35% 35%, #38bdf8 0%, #0284c7 100%);
     border: 2px solid #e0f2fe;
 }
 
+/* 🔴 EQUIPO DEFENSOR: Gradiente esférico rojo con borde luminoso coral */
 .token.defense {
-    background: radial-gradient(circle, #f87171 0%, #dc2626 100%);
+    background: radial-gradient(circle at 35% 35%, #f87171 0%, #dc2626 100%);
     border: 2px solid #fee2e2;
 }
 
+/* 🏀 EL BALÓN DE JUEGO: Un poco más grande para resaltar en la cancha */
 .token.ball {
-    width: 4.5%; /* Balón del mismo tamaño que los jugadores */
-    background: radial-gradient(circle, #f97316 0%, #ea580c 100%);
-    border: 1px solid #ffedd5;
-    z-index: 10;
+    width: 5.2%; /* Un poco más grande que las fichas (4.5%) para que destaque */
+    background: radial-gradient(circle at 35% 35%, #f97316 0%, #ea580c 100%);
+    border: 1.5px solid #ffedd5;
+    z-index: 10; /* El balón siempre vuela por encima de los jugadores */
 }
 
+/* =======================================================================
+   🚀 3. EL ESTADO ACTIVO (CONTROL DE AGARRE MILIMÉTRICO)
+   ======================================================================= */
 .token:active {
     cursor: grabbing;
-    transform: translate(-50%, -50%) scale(1.2);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-    z-index: 20;
+    z-index: 100; /* Coloca la ficha arrastrada encima de todas las demás */
+    
+    /* 💡 SOLUCIÓN AL DESCOLGAMIENTO:
+       - Mantenemos estrictamente el 'translate' para no perder el centro del dedo.
+       - Eliminamos el 'scale(1.2)' para que la ficha no crezca físicamente en el arrastre.
+       - En su lugar, proyectamos una corona de luz amarilla y una sombra profunda. */
+    transform: translate(-50%, -50%);
+    
+    box-shadow: 0 0 0 4px rgba(255, 212, 59, 0.55), /* Corona amarilla de selección */
+                0 10px 18px rgba(0, 0, 0, 0.45),     /* Sombra de altura en el parqué */
+                inset 0 -3px 5px rgba(0, 0, 0, 0.3);  /* Mantiene el relieve de la esfera */
 }
 
 /* ==========================================
