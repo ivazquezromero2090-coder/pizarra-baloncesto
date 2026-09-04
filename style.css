@@ -284,9 +284,13 @@ body {
     position: absolute;
     z-index: 10; /* Se dibuja por encima del dibujo de la cancha */
     
-    /* 🕒 EL MUELLE ELÁSTICO (TRANSICIÓN):
-       Hace que al tocar la ficha se agrande suavemente en 0.2 segundos */
-    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+    /* =======================================================================
+       🌟 LA SUPER-TRANSICIÓN FUSIONADA:
+       Separamos por comas cada canal para que el navegador anime TODO a la vez.
+       ======================================================================= */
+    transition: top 0.5s ease-in-out, 
+                left 0.5s ease-in-out, 
+                transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
                 box-shadow 0.2s ease;
 }
 
@@ -316,7 +320,12 @@ body {
     position: absolute;
     z-index: 20; /* El balón SIEMPRE vuela por encima de las cabezas de los jugadores */
     
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    /* 🌟 Fusión de deslizamiento (top/left) y elevación (transform/shadow) */
+    transition: top 0.5s ease-in-out, 
+                left 0.5s ease-in-out, 
+                transform 0.2s ease, 
+                box-shadow 0.2s ease;
+                
     box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5),
                 inset 0 -1.5px 3px rgba(0, 0, 0, 0.4);
 }
