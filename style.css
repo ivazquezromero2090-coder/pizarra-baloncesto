@@ -248,30 +248,57 @@ body {
     animation: fadeIn 0.3s ease;
 }
 
-/* 🪵 APLICAMOS EL PARQUÉ EN TU CONTENEDOR REAL */
-.court-container { 
-    position: relative;
-    width: 100%;
-    height: 100%;
-    background-color: #e5c185; /* Tono madera */
+/* =======================================================================
+   🪵 1. EL CONTENEDOR DE LA CANCHA (MADERA DORADA RESPONSIVA)
+   ======================================================================= */
+.court-container {
+    position: relative; /* 📌 Base de anclaje para que las líneas y fichas floten dentro */
+    width: 100%;        /* Se estira al ancho máximo de la tablet */
+    
+    /* 📐 LA LLAVE MAESTRA GEOMÉTRICA:
+       Sincronizamos la madera con la proporción exacta del viewBox del SVG (280/150).
+       ¡Esto elimina los pasillos vacíos de madera y centra todo automáticamente! */
+    aspect-ratio: 280 / 150; 
+    
+    background-color: #e5c185; /* Tono madera de pino dorada */
     background-image: 
         linear-gradient(90deg, rgba(94, 59, 21, 0.12) 1px, transparent 1px),
         linear-gradient(0deg, rgba(94, 59, 21, 0.12) 1px, transparent 1px),
         radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.15) 0%, rgba(0, 0, 0, 0.08) 100%);
     background-size: 90px 100%, 100% 24px, 100% 100%;
-    border: 4px solid #5e3b15;
-    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
+    
+    border: 4px solid #5e3b15; /* Elegante marco de madera oscura */
+    box-sizing: border-box;    /* 🛡️ El marco de madera no altera el tamaño interior */
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2); /* Sombra interna de parqué pulido */
     overflow: hidden;
 }
 
-/* 🎨 LAS LÍNEAS DE JUEGO ADAPTADAS A TU CLASE */
-.court-lines line, .court-lines circle, .court-lines path, .court-lines rect {
-    stroke: rgba(255, 255, 255, 0.65) !important; /* Blanco satinado semitransparente */
-    stroke-width: 2px;
+/* =======================================================================
+   🎨 2. LAS LÍNEAS DE JUEGO (EL ACETATO PERFECTAMENTE ACOPLADO)
+   ======================================================================= */
+.court-lines {
+    position: absolute; /* 🚀 Despega las líneas para que floten encima de la madera */
+    top: 0;             /* Clavadas al milímetro en la esquina superior */
+    left: 0;            /* Clavadas al milímetro en la esquina izquierda */
+    width: 100%;        /* Se expanden hasta tocar el borde derecho */
+    height: 100%;       /* Se expanden hasta tocar el borde inferior */
+    display: block;     /* Elimina márgenes invisibles de renderizado */
 }
 
-.court-lines polygon, .court-lines path {
-    fill: rgba(255, 255, 255, 0.05) !important; /* Relleno sutil para las zonas */
+/* 🖌️ EL BARNIZ DE LAS LÍNEAS (ELEGANCIA SEMITRANSPARENTE) */
+.court-lines line, 
+.court-lines circle, 
+.court-lines path, 
+.court-lines rect {
+    /* 🌟 Al usar 65% de opacidad, las vetas del parqué se ven a través de las líneas,
+       tal como en las pistas profesionales de madera reales */
+    stroke: rgba(255, 255, 255, 0.65) !important;
+    stroke-width: 1.5px; /* Un trazo más sutil y elegante */
+}
+
+.court-lines polygon, 
+.court-lines path {
+    fill: rgba(255, 255, 255, 0.04) !important; /* Sutil velo de color para definir las zonas */
 }
 
 /* =======================================================================
