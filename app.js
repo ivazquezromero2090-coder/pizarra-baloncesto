@@ -50,12 +50,6 @@ const statusText = document.getElementById('status-text');
 // 🧠 BLOQUE 1: VARIABLES DE ESTADO GLOBAL (NUESTRO ARCHIVADOR)
 // =======================================================================
 
-// El "Playbook" es la tira de película que almacena todos los pasos de la jugada
-let playbook = []; 
-
-// El "currentStepIndex" es el cursor que nos dice qué paso estamos viendo ahora mismo.
-// Recuerda: en programación empezamos a contar siempre desde el número 0 (Paso 1 = Índice 0) [Source 273].
-let currentStepIndex = 0; 
 
 // Inicializar Aplicación al cargar la ventana
 window.addEventListener('load', () => {
@@ -671,94 +665,72 @@ function guardarEnLocal(jugadaObj) {
 }
 
 // =======================================================================
-// 🛡️ BLOQUE 2: LA FUNCIÓN DE CAPTURA CON CLONACIÓN PROFUNDA (DEEP COPY)
+// 🚀 INSERCIÓN SEGURA: LÓGICA DE PASOS UNIFICADA
 // =======================================================================
 
+// Función para capturar las coordenadas de las fichas en el paso activo
 function capturarEstadoFichas() {
-    let estadoFichas = [];
+    let estadoFichas = {};
     
-    // Buscamos todas las fichas tácticas reales que hay en el parqué de la pantalla
+    // Buscamos todas las fichas en la pantalla
     const fichasEnPantalla = document.querySelectorAll('.token');
     
     fichasEnPantalla.forEach(ficha => {
-        // Leemos las coordenadas actuales X e Y guardadas en la pantalla
-        estadoFichas.push({
-            id: ficha.id,                                // Ej: "attack1", "ball"
-            x: parseFloat(ficha.style.left) || 0,        // Posición horizontal en %
-            y: parseFloat(ficha.style.top) || 0          // Posición vertical en %
-        });
+        // Guardamos las posiciones en % tal y como las maneja tu POSICIONES_INICIALES
+        estadoFichas[ficha.id] = {
+            x: parseFloat(ficha.style.left) || 0,
+            y: parseFloat(ficha.style.top) || 0
+        };
     });
     
-    // 🌟 EL TRUCO DEL CLONADOR PERFECTO:
-    // Convertimos la lista de coordenadas a texto plano (stringify) y la reconstruimos (parse).
-    // Así rompemos cualquier hilo invisible de referencia en la memoria [Source 24, 60, 66].
+    // Clonación profunda matemática para evitar hilos de referencia
     return JSON.parse(JSON.stringify(estadoFichas));
 }
 
-
-// =======================================================================
-// 🚀 BLOQUE 3: CREAR UN NUEVO PASO DE LA JUGADA (HACIA ADELANTE)
-// =======================================================================
-
+// Función para agregar un nuevo paso con el límite de 10
 function agregarNuevoPaso() {
-    // 🛑 REGLA DE NEGOCIO: Evitar que la memoria se sature (Límite de 10 pasos)
-    if (playbook.length >= 10) {
-        alert("¡Atención Entrenador! El límite máximo para una jugada es de 10 pasos.");
-        return; // Detiene la función de inmediato y no añade nada
+    // 🛑 REGLA DE NEGOCIO: Límite estricto de 10 pasos
+    if (jugadaPasos.length >= 10) {
+        alert("⚠️ ¡Atención Entrenador! El límite máximo para una jugada es de 10 pasos.");
+        return;
     }
     
-    // 1. Capturamos la "fotografía" independiente de cómo están colocados los jugadores ahora mismo
+    // 1. Capturamos la disposición actual
     const nuevoFotograma = capturarEstadoFichas();
     
-    // 2. Metemos la foto en el archivador (al final de nuestra lista) [Source 271]
-    playbook.push(nuevoFotograma);
+    // 2. Lo añadimos a tu lista oficial de pasos (jugadaPasos)
+    jugadaPasos.push(nuevoFotograma);
     
-    // 3. Movemos nuestro cursor activo al nuevo paso que acabamos de crear
-    currentStepIndex = playbook.length - 1;
+    // 3. Movemos tu cursor activo (pasoActivoIndex) al nuevo paso recién creado
+    pasoActivoIndex = jugadaPasos.length - 1;
     
-    // 4. Actualizamos la interfaz (dibujar botones abajo y refrescar pantalla)
-    actualizarBarraPasosUI();
-    console.log(`Paso ${playbook.length} creado con éxito y clonado por valor.`);
+    // 4. Actualizamos la pantalla de tu tablet
+    actualizarUI(); 
+    mostrarToast(`Paso ${jugadaPasos.length} creado.`);
 }
 
-
-// =======================================================================
-// 🗑️ BLOQUE 4: ELIMINACIÓN DE PASOS CON CONFIRMACIÓN SEGURA
-// =======================================================================
-
+// Función para eliminar el paso actual con confirmación segura
 function eliminarPasoActual() {
-    // 🛑 REGLA DE NEGOCIO: La jugada debe tener siempre al menos un paso
-    if (playbook.length <= 1) {
+    // 🛑 REGLA DE NEGOCIO: Mínimo 1 paso activo obligatorio
+    if (jugadaPasos.length <= 1) {
         alert("No puedes eliminar este paso. La pizarra táctica debe tener al menos 1 paso activo.");
-        return; // Detiene la ejecución
+        return;
     }
     
-    // 🛡️ EL GUARDAESPALDAS DE SEGURIDAD (CONFIRMACIÓN DE USUARIO):
-    // La función native 'confirm' detendrá la app y preguntará al entrenador [Source 213].
-    const entrenadorConfirma = confirm(
-        `¿Seguro que quieres eliminar el "Paso ${currentStepIndex + 1}"?\n\nEsta acción no se puede deshacer.`
-    );
+    // 🛡️ EL GUARDAESPALDAS DE CONFIRMACIÓN
+    const confirmar = confirm(`¿Seguro que quieres eliminar el "Paso ${pasoActivoIndex + 1}"?\n\nEsta acción no se puede deshacer.`);
+    if (!confirmar) return; // Cancelación segura
     
-    // Si el entrenador pulsa "Cancelar" (devuelve false), salimos de la función y no tocamos nada
-    if (!entrenadorConfirma) {
-        console.log("Eliminación cancelada por el entrenador.");
-        return; 
+    // 1. MUTACIÓN: Eliminamos el paso de tu lista oficial usando su índice
+    jugadaPasos.splice(pasoActivoIndex, 1);
+    
+    // 2. REGLA DE NAVEGACIÓN: Si borramos el último, retrocedemos un paso
+    if (pasoActivoIndex >= jugadaPasos.length) {
+        pasoActivoIndex = jugadaPasos.length - 1;
     }
     
-    // Si confirma (devuelve true), procedemos con la trituración quirúrgica de datos:
-    // 1. Eliminamos el paso del arreglo global usando su índice activo [Source 18]
-    playbook.splice(currentStepIndex, 1);
-    
-    // 2. REGLA DE NAVEGACIÓN: Si borramos el último paso, retrocedemos el cursor al nuevo último paso
-    if (currentStepIndex >= playbook.length) {
-        currentStepIndex = playbook.length - 1;
-    }
-    
-    // 3. REINDEXACIÓN Y LIMPIEZA: Redibujamos la barra inferior con los nombres corregidos
-    actualizarBarraPasosUI();
-    
-    // 4. Cargamos en el parqué las posiciones del paso que ha quedado activo
-    cargarPasoEnPantalla(currentStepIndex);
-    
-    console.log("Paso eliminado. El archivador global ha sido reindexado con éxito.");
+    // 3. Refrescamos la pantalla con las nuevas posiciones y botones reindexados
+    actualizarUI();
+    aplicarPosicionesPantalla(jugadaPasos[pasoActivoIndex]);
+    mostrarToast("Paso eliminado con éxito.");
 }
