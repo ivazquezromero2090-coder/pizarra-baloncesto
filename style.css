@@ -269,80 +269,24 @@ body {
     pointer-events: none;
 }
 
-/* 👤 EL CONTENEDOR BASE DE CADA JUGADOR (EN REPOSO) */
+/* Fichas Tácticas */
 .token {
-    width: 46px;
-    height: 46px;
-    border-radius: 50%; /* Fuerza un círculo perfecto */
+    position: absolute;
+    width: 4.5%;
+    aspect-ratio: 1 / 1;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: bold;
-    color: white;
-    cursor: grab; /* Indica que se puede agarrar con el dedo */
-    user-select: none; /* Evita que se seleccione el número al arrastrar */
-    position: absolute;
-    z-index: 10; /* Se dibuja por encima del dibujo de la cancha */
-    
-    /* =======================================================================
-       🌟 LA SUPER-TRANSICIÓN FUSIONADA:
-       Separamos por comas cada canal para que el navegador anime TODO a la vez.
-       ======================================================================= */
-    transition: top 0.5s ease-in-out, 
-                left 0.5s ease-in-out, 
-                transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
-                box-shadow 0.2s ease;
-}
-
-/* 🔴 EQUIPO ROJO (ATACANTES): Gradiente esférico rojo y sombra base */
-.token.attack {
-    background: radial-gradient(circle at 30% 30%, #ff6b6b, #c92a2a);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 
-                inset 0 -2px 4px rgba(0, 0, 0, 0.3); /* Alumbra la parte inferior */
-}
-
-/* 🔵 EQUIPO AZUL (DEFENSORES): Gradiente esférico azul y sombra base */
-.token.defense {
-    background: radial-gradient(circle at 30% 30%, #4dadf7, #1864ab);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4), 
-                inset 0 -2px 4px rgba(0, 0, 0, 0.3);
-}
-
-/* 🏀 EL BALÓN: GRANDE, REDONDO Y CON RELIEVE */
-.token.ball {
-    width: 48px;  /* 🌟 Ambos valores deben ser idénticos para evitar deformaciones */
-    height: 48px; 
-    border-radius: 50%; /* Fuerza el círculo perfecto */
-    background: radial-gradient(circle at 35% 35%, #ff922b, #d9480f);
-    border: 1.5px solid #000000;
+    font-size: 1.2vw;
+    color: #ffffff;
     cursor: grab;
-    position: absolute;
-    z-index: 20;
-    
-    /* 🕒 Transición por defecto para cuando se mueva solo entre pasos */
-    transition: top 0.5s ease-in-out, 
-                left 0.5s ease-in-out, 
-                transform 0.2s ease, 
-                box-shadow 0.2s ease;
-                
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5),
-                inset 0 -1.5px 3px rgba(0, 0, 0, 0.4);
-}
-
-/* 🚀 EFECTO ELEVADO: SE ACTIVA AL AGARRAR UNA FICHA CON EL DEDO (CLASE .DRAGGING O TOQUE) */
-.token:active, .token.dragging,
-.token.ball:active, .token.ball.dragging {
-    cursor: grabbing; /* Cambia a mano cerrada de "sujeción" */
-    
-    /* 📈 Elevamos la ficha haciéndola un 15% más grande */
-    transform: scale(1.15); 
-    
-    /* 👑 Prioridad absoluta: evita que pase por debajo de otros jugadores quietos */
-    z-index: 100; 
-
-    /* 👥 Sombra aérea: se aleja 10px y se difumina 15px en el suelo */
-    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.35), 
-                inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+    user-select: none;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    transform: translate(-50%, -50%);
+    touch-action: none;
+    z-index: 2;
 }
 
 /* Clase de animación para transiciones suaves */
@@ -401,14 +345,4 @@ body {
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
-}
-
-/* ⚡ QUITAR RETARDO EN ARRASTRE (APAGAR CORREA ELÁSTICA EN TIEMPO REAL) */
-.token:active, .token.dragging,
-.token.ball:active, .token.ball.dragging {
-    /* 🌟 Al poner 'none' en top y left, eliminamos el retardo y la ficha va al milímetro con el dedo */
-    transition: top 0s, 
-                left 0s, 
-                transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
-                box-shadow 0.2s ease;
 }
