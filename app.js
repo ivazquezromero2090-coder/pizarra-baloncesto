@@ -1,8 +1,8 @@
 // ==========================================
 // ☁️ CONFIGURACIÓN Y CONEXIÓN CON SUPABASE
 // ==========================================
-const SUPABASE_URL = "https://TU_PROJECT_URL_AQUÍ.supabase.co"; 
-const SUPABASE_ANON_KEY = "TU_API_KEY_PUBLICA_AQUÍ";
+const SUPABASE_URL = "https://hlrlyyvddvtbvmzariuf.supabase.co"; 
+const SUPABASE_ANON_KEY = "sb_publishable_X-hpA6s1Zeo7aLpT608fIQ_ig_qB0Ie";
 
 // 🌟 Renombramos a 'supabaseClient' para evitar que choque con el CDN
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
