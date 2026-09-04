@@ -328,12 +328,15 @@ body {
     border: 2px solid #fee2e2;
 }
 
-/* 🏀 EL BALÓN DE JUEGO: Un poco más grande para resaltar en la cancha */
+/* 🏀 EL BALÓN DE JUEGO: /
 .token.ball {
-    width: 5.2%; /* Un poco más grande que las fichas (4.5%) para que destaque */
+    /* 🌟 Reducimos el ancho. El 'aspect-ratio: 1/1' heredado mantendrá el balón redondo */
+    width: 3.2%; 
+    
+    /* 🎨 Efecto esférico naranja de baloncesto */
     background: radial-gradient(circle at 35% 35%, #f97316 0%, #ea580c 100%);
-    border: 1.5px solid #ffedd5;
-    z-index: 10; /* El balón siempre vuela por encima de los jugadores */
+    border: 1px solid #ffedd5;
+    z-index: 10; /* El balón vuela por encima de los jugadores */
 }
 
 /* =======================================================================
