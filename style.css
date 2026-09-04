@@ -337,6 +337,38 @@ body {
                 inset 0 -2px 4px rgba(0, 0, 0, 0.2);
 }
 
+/* Clase de animación para transiciones suaves */
+.animate-transition {
+    transition: left 0.6s ease-in-out, top 0.6s ease-in-out;
+}
+
+@media (min-width: 950px) {
+    .token { font-size: 12px; }
+}
+
+.token.attack {
+    background: radial-gradient(circle, #38bdf8 0%, #0284c7 100%);
+    border: 2px solid #e0f2fe;
+}
+
+.token.defense {
+    background: radial-gradient(circle, #f87171 0%, #dc2626 100%);
+    border: 2px solid #fee2e2;
+}
+
+.token.ball {
+    width: 4.5%; /* Balón del mismo tamaño que los jugadores */
+    background: radial-gradient(circle, #f97316 0%, #ea580c 100%);
+    border: 1px solid #ffedd5;
+    z-index: 10;
+}
+
+.token:active {
+    cursor: grabbing;
+    transform: translate(-50%, -50%) scale(1.2);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+    z-index: 20;
+}
 
 /* ==========================================
    4. LÍNEA DE TIEMPO (BARRA INFERIOR)
