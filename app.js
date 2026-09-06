@@ -734,3 +734,26 @@ function eliminarPasoActual() {
     aplicarPosicionesPantalla(jugadaPasos[pasoActivoIndex]);
     mostrarToast("Paso eliminado con éxito.");
 }
+
+// =======================================================================
+// 🔌 CONEXIÓN DE LOS NUEVOS BOTONES (EVENT LISTENERS)
+// =======================================================================
+
+// Buscamos los nuevos botones físicos que acabamos de instalar en el HTML
+const btnAddStep = document.getElementById('btn-add-step');
+const btnDeleteStep = document.getElementById('btn-delete-step');
+
+// Conectamos los cables cuando la ventana termine de cargar
+window.addEventListener('load', () => {
+    // Si el navegador encuentra el botón de Añadir Paso...
+    if (btnAddStep) {
+        // ...le asocia nuestra función segura con límite de 10 pasos
+        btnAddStep.addEventListener('click', agregarNuevoPaso);
+    }
+    
+    // Si el navegador encuentra el botón de la Papelera...
+    if (btnDeleteStep) {
+        // ...le asocia nuestra confirmación segura antes de borrar
+        btnDeleteStep.addEventListener('click', eliminarPasoActual);
+    }
+});
