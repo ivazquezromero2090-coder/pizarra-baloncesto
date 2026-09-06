@@ -96,6 +96,11 @@ function aplicarPosicionesPantalla(posiciones) {
 
 // 4. CONFIGURAR DRAG & DROP MULTITÁCTIL CON LÍMITES SEGUROS
 function configurarArrastre() {
+    // Si el entrenador toca la pantalla con su dedo, se congela cualquier animación en curso de inmediato
+    if (animacionIntervalo) {
+    clearInterval(animacionIntervalo);
+    animacionIntervalo = null;
+    }
     let isDragging = false;
     let activeToken = null;
 
@@ -205,7 +210,7 @@ function cambiarPaso(direccion) {
     historialMovimientos = [];
 
     aplicarAnimacionTemporal();
-    aplicarPosicionesPantalla(jugadaPasos[pasoActivoIndex]);
+    aplicarPosicionesConAnimacion(jugadaPasos[pasoActivoIndex], 500);
     actualizarUI();
 }
 
@@ -757,3 +762,80 @@ window.addEventListener('load', () => {
         btnDeleteStep.addEventListener('click', eliminarPasoActual);
     }
 });
+
+// =======================================================================
+// ⚙️ MOTOR DE ANIMACIÓN MATEMÁTICO (VÍA JAVASCRIPT - OPCIÓN B)
+// =======================================================================
+
+// 1. Guardamos una variable global para controlar el metrónomo.
+// Así podemos detener la animación si el entrenador cambia de paso a mitad de camino [Módulo 7].
+let animacionIntervalo = null; 
+
+/**
+ * Desplaza suavemente todas las fichas desde sus posiciones actuales
+ * hasta las posiciones del paso de destino.
+ * @param {Object} posicionesDestino - Coordenadas X e Y finales de las 11 fichas [Módulo 6].
+ * @param {number} duracion - Tiempo total del viaje en milisegundos (por defecto 500ms).
+ */
+function aplicarPosicionesConAnimacion(posicionesDestino, duracion = 500) {
+    
+    // 🛡️ REGLA DE SEGURIDAD: Si ya hay una animación corriendo, la paramos de inmediato
+    // para evitar que dos temporizadores se peleen por mover al mismo jugador [Módulo 5].
+    if (animacionIntervalo) {
+        clearInterval(animacionIntervalo);
+        animacionIntervalo = null;
+    }
+
+    // 2. CAPTURA DEL PUNTO DE PARTIDA (Punto A)
+    // Guardamos la posición exacta en la que se encuentra físicamente cada ficha en la pantalla justo ahora.
+    const posicionesOrigen = {};
+    const todasLasFichas = document.querySelectorAll('.token');
+    
+    todasLasFichas.forEach(ficha => {
+        posicionesOrigen[ficha.id] = {
+            x: parseFloat(ficha.style.left) || 0,
+            y: parseFloat(ficha.style.top) || 0
+        };
+    });
+
+    // 3. CONFIGURACIÓN DEL VIAJE TEMPORAL
+    const intervaloMs = 16; // ~60 actualizaciones por segundo (el estándar de fluidez FPS) [Plano de Arquitectura Lógica]
+    let tiempoTranscurrido = 0;
+
+    // 4. ENCIENDE EL METRÓNOMO (Arranca el bucle de tiempo) [Módulo 5]
+    animacionIntervalo = setInterval(() => {
+        tiempoTranscurrido += intervaloMs;
+        
+        // Calculamos qué fracción del viaje hemos completado (un número entre 0.0 y 1.0)
+        let progreso = tiempoTranscurrido / duracion;
+
+        // 🛑 EL FRENO DE MANO: Si el tiempo se agota, clavamos el progreso en 1.0 (100%)
+        // y apagamos el temporizador de la memoria de la tablet [Módulo 5].
+        if (progreso >= 1) {
+            progreso = 1;
+            clearInterval(animacionIntervalo);
+            animacionIntervalo = null;
+        }
+
+        // 5. MOVIMIENTO QUIRÚRGICO DE CADA FICHA
+        todasLasFichas.forEach(ficha => {
+            const id = ficha.id;
+            const origen = posicionesOrigen[id];
+            const destino = posicionesDestino[id];
+
+            // Si por alguna razón la ficha no tiene coordenadas de destino, no la tocamos
+            if (!origen || !destino) return;
+
+            // 📐 LA FÓRMULA MAESTRA DE INTERPOLACIÓN (LERP):
+            // Posicion_Actual = Origen + (Distancia * Progreso)
+            // Esto asegura que la ficha se desplace en una línea recta perfecta.
+            const actualX = origen.x + (destino.x - origen.x) * progreso;
+            const actualY = origen.y + (destino.y - origen.y) * progreso;
+
+            // Pintamos la nueva coordenada en la pantalla del dispositivo
+            ficha.style.left = `${actualX}%`;
+            ficha.style.top = `${actualY}%`;
+        });
+
+    }, intervaloMs); // Se repite cada 16 milisegundos [Módulo 5]
+}
