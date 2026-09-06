@@ -54,6 +54,8 @@ const listPersonal = document.getElementById('list-personal');
 const listSchool = document.getElementById('list-school');
 const statusDot = document.getElementById('status-dot');
 const statusText = document.getElementById('status-text');
+const btnUndo = document.getElementById('btn-undo');
+
 
 // =======================================================================
 // 🧠 BLOQUE 1: VARIABLES DE ESTADO GLOBAL (NUESTRO ARCHIVADOR)
@@ -70,6 +72,10 @@ window.addEventListener('load', () => {
 
 if (btnPlayPause) {
     btnPlayPause.addEventListener('click', alternarReproduccion);
+}
+
+if (btnUndo) {
+    btnUndo.addEventListener('click', deshacerUltimoMovimiento);
 }
 
 // 1. INICIALIZAR LIENZO NUEVO
@@ -933,4 +939,49 @@ function iniciarCicloReproduccion() {
         }
         
     }, 2500); // Frecuencia del metrónomo: 2.5 segundos [Plano de Arquitectura Lógica]
+}
+
+// =======================================================================
+// ↩️ SISTEMA DE DESHACER (UNDO) CON PILA LIFO
+// =======================================================================
+
+/**
+ * Captura las posiciones actuales de las fichas, hace una "Foto Polaroid"
+ * (clonación por valor) y las apila en el historial [Source 15, 45, 86].
+ */
+function guardarEstadoEnHistorial() {
+    // 📸 Sacamos la foto inmutable rompiendo la referencia de memoria [Source 45]
+    const fotoActual = capturarEstadoFichas();
+    
+    // 📥 Hacemos un PUSH para colocar la foto arriba de nuestra pila [Source 15, 86]
+    historialMovimientos.push(fotoActual);
+}
+
+/**
+ * Desapila el último estado guardado y devuelve las fichas a esa posición
+ * de manera suave y sincronizada [Source 85, 86, 87].
+ */
+function deshacerUltimoMovimiento() {
+    // 🛡️ ESCUDO DE CONTROL: Si la pila está vacía, no hay nada que deshacer [Source 10]
+    if (historialMovimientos.length === 0) {
+        mostrarToast("No hay movimientos que deshacer.");
+        return;
+    }
+    
+    // 1. DESAPILAR (POP): Sacamos el plato que está arriba del todo de la pila [Source 87]
+    const estadoAnterior = historialMovimientos.pop();
+    
+    // 2. ACTUALIZACIÓN: Sobrescribimos el paso activo en memoria con la foto recuperada [Source 2]
+    // Usamos clonación profunda para que la pizarra siga libre de hilos de referencia [Source 45]
+    jugadaPasos[pasoActivoIndex] = JSON.parse(JSON.stringify(estadoAnterior));
+    
+    // El lienzo tiene cambios sin guardar que debemos recordar
+    tieneCambiosSinGuardar = true;
+    
+    // 3. REDIBUJAR: Deslizamos suavemente las fichas hacia atrás en el parqué (en 300ms)
+    aplicarPosicionesConAnimacion(estadoAnterior, 300);
+    
+    // 4. Actualizamos la pantalla de tu tablet
+    actualizarUI();
+    mostrarToast("Movimiento deshecho.");
 }
