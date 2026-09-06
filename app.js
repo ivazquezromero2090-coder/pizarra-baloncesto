@@ -28,6 +28,8 @@ const POSICIONES_INICIALES = {
 let reproductorIntervalo = null;
 let estaReproduciendo = false;
 const btnPlayPause = document.getElementById('btn-play-pause');
+const btnAddStep = document.getElementById('btn-add-step');
+const btnDeleteStep = document.getElementById('btn-delete-step');
 
 // Variables de Estado de la Aplicación
 let rolActual = 'entrenador'; // 'entrenador' o 'admin'
@@ -767,10 +769,6 @@ function eliminarPasoActual() {
 // =======================================================================
 // 🔌 CONEXIÓN DE LOS NUEVOS BOTONES (EVENT LISTENERS)
 // =======================================================================
-
-// Buscamos los nuevos botones físicos que acabamos de instalar en el HTML
-const btnAddStep = document.getElementById('btn-add-step');
-const btnDeleteStep = document.getElementById('btn-delete-step');
 
 // Conectamos los cables cuando la ventana termine de cargar
 window.addEventListener('load', () => {
