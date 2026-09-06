@@ -100,21 +100,28 @@ function aplicarPosicionesPantalla(posiciones) {
 
 // 4. CONFIGURAR DRAG & DROP MULTITÁCTIL CON LÍMITES SEGUROS
 function configurarArrastre() {
-    // Si el entrenador toca la pantalla, pausamos el reproductor de inmediato
-    detenerReproduccion();
-    if (btnPlayPause) btnPlayPause.innerHTML = "▶ Reproducir";
-
-    // Si el entrenador toca la pantalla con su dedo, se congela cualquier animación en curso de inmediato
-    if (animacionIntervalo) {
-    clearInterval(animacionIntervalo);
-    animacionIntervalo = null;
-    }
+    // 🌟 Eliminamos las pausas de aquí arriba, porque este sitio solo se ejecuta al cargar la web.
+    
     let isDragging = false;
     let activeToken = null;
 
+    // Esta es la función que reacciona en el instante exacto en que se toca una ficha
     function startDrag(e) {
         const token = e.target.closest('.token');
         if (!token || (esJugadaOficialActiva && rolActual === 'entrenador')) return; // Bloqueo si es oficial solo lectura
+
+        // =======================================================================
+        // 🔌 CONEXIÓN DE SEGURIDAD (EL DEDO ES EL REY)
+        // Colocamos las pausas justo aquí dentro, para que se activen al tocar la ficha [Source 19].
+        // =======================================================================
+        detenerReproduccion();
+        if (btnPlayPause) btnPlayPause.innerHTML = "▶ Reproducir";
+
+        if (animacionIntervalo) {
+            clearInterval(animacionIntervalo);
+            animacionIntervalo = null;
+        }
+        // =======================================================================
 
         isDragging = true;
         activeToken = token;
@@ -164,6 +171,7 @@ function configurarArrastre() {
         activeToken = null;
     }
 
+    // Instalamos los cables de escucha en la pantalla [Source 19]
     court.addEventListener('mousedown', startDrag);
     window.addEventListener('mousemove', drag);
     window.addEventListener('mouseup', stopDrag);
@@ -171,7 +179,8 @@ function configurarArrastre() {
     court.addEventListener('touchstart', startDrag, { passive: false });
     window.addEventListener('touchmove', drag, { passive: false });
     window.addEventListener('touchend', stopDrag);
-}
+} // 🌟 ¡SOLUCIONADO! Ahora solo hay una llave de cierre al final de la función.
+
 
 // 5. HISTORIAL DE DESHACER (PILA LIFO)
 function guardarEstadoEnHistorial() {
