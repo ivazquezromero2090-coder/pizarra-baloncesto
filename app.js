@@ -59,6 +59,10 @@ window.addEventListener('load', () => {
     comprobarConectividad();
 });
 
+if (btnPlayPause) {
+    btnPlayPause.addEventListener('click', alternarReproduccion);
+}
+
 // 1. INICIALIZAR LIENZO NUEVO
 function inicializarLienzoNuevo() {
     jugadaPasos = [JSON.parse(JSON.stringify(POSICIONES_INICIALES))]; // Paso semilla
@@ -96,6 +100,10 @@ function aplicarPosicionesPantalla(posiciones) {
 
 // 4. CONFIGURAR DRAG & DROP MULTITÁCTIL CON LÍMITES SEGUROS
 function configurarArrastre() {
+    // Si el entrenador toca la pantalla, pausamos el reproductor de inmediato
+    detenerReproduccion();
+    if (btnPlayPause) btnPlayPause.innerHTML = "▶ Reproducir";
+
     // Si el entrenador toca la pantalla con su dedo, se congela cualquier animación en curso de inmediato
     if (animacionIntervalo) {
     clearInterval(animacionIntervalo);
@@ -838,4 +846,84 @@ function aplicarPosicionesConAnimacion(posicionesDestino, duracion = 500) {
         });
 
     }, intervaloMs); // Se repite cada 16 milisegundos [Módulo 5]
+}
+
+// =======================================================================
+// ⏸️ REPRODUCTOR TÁCTICO AUTOMÁTICO (PLAY / PAUSA)
+// =======================================================================
+
+// 1. VARIABLES DE ESTADO DE TIEMPO (La memoria del reproductor) [Source 14]
+let reproductorIntervalo = null; // Almacenará el segundero activo en memoria
+let estaReproduciendo = false;    // Interruptor: true = encendido, false = apagado [Source 21]
+
+// Buscamos el botón físico que instalamos en el HTML
+const btnPlayPause = document.getElementById('btn-play-pause');
+
+/**
+ * Función principal que se activa al pulsar el botón "Play/Pausa".
+ * Decide si debe arrancar la película táctica o congelarla [Source 10, 16].
+ */
+function alternarReproduccion() {
+    if (estaReproduciendo) {
+        // CONDICIONAL SI: Si ya está encendido, el entrenador quiere PAUSAR [Source 10]
+        detenerReproduccion();
+        if (btnPlayPause) btnPlayPause.innerHTML = "▶ Reproducir";
+        mostrarToast("Reproducción pausada.");
+    } else {
+        // CONDICIONAL SINO: Si está apagado, el entrenador quiere REPRODUCIR [Source 10]
+        estaReproduciendo = true;
+        if (btnPlayPause) btnPlayPause.innerHTML = "⏸ Pausa";
+        mostrarToast("Iniciando jugada táctica...");
+        
+        // Arrancamos el ciclo de avance automático
+        iniciarCicloReproduccion();
+    }
+}
+
+/**
+ * Detiene físicamente el reproductor y limpia la memoria de la tablet.
+ */
+function detenerReproduccion() {
+    estaReproduciendo = false;
+    if (reproductorIntervalo) {
+        clearInterval(reproductorIntervalo); // Apagamos el segundero [Plano de Arquitectura Lógica]
+        reproductorIntervalo = null;
+    }
+}
+
+/**
+ * El metrónomo maestro de la jugada. Pasa los pasos de forma secuencial.
+ */
+function iniciarCicloReproduccion() {
+    // ⏲️ Sincronización de Tiempos:
+    // El metrónomo sonará cada 2.5 segundos (2500 milisegundos).
+    // Esto da 500ms para que las fichas se deslicen suavemente y 2 segundos enteros
+    // para que los alumnos observen la táctica antes del siguiente movimiento [Plano de Arquitectura Lógica].
+    reproductorIntervalo = setInterval(() => {
+        
+        // 🛑 REGLA DE NEGOCIO: ¿Hemos llegado al último paso creado de la jugada? [Source 10, 14]
+        if (pasoActivoIndex >= jugadaPasos.length - 1) {
+            
+            // Fin de trayecto: detenemos el reproductor automático
+            detenerReproduccion();
+            if (btnPlayPause) btnPlayPause.innerHTML = "▶ Reproducir";
+            
+            // 🔄 OPCIONAL REINICIAR: Devolvemos la jugada al Paso 1 para que pueda volver a verse
+            pasoActivoIndex = 0;
+            aplicarPosicionesConAnimacion(jugadaPasos[pasoActivoIndex], 500);
+            actualizarUI();
+            mostrarToast("Jugada completada. Lista para repetir.");
+            
+        } else {
+            // SINO: Avanzamos de forma segura un paso hacia adelante en la línea de tiempo [Source 10]
+            pasoActivoIndex++;
+            
+            // Desplazamos las fichas de forma animada por el parqué clásico
+            aplicarPosicionesConAnimacion(jugadaPasos[pasoActivoIndex], 500);
+            
+            // Actualizamos los textos e indicadores inferiores
+            actualizarUI();
+        }
+        
+    }, 2500); // Frecuencia del metrónomo: 2.5 segundos [Plano de Arquitectura Lógica]
 }

@@ -96,21 +96,20 @@
                 <div class="token ball" style="left: 45%; top: 50%;" id="token-ball"></div>
             </div>
 
-            <<!-- 🏀 LÍNEA DE TIEMPO INFERIOR CORREGIDA Y EQUIPADA -->
+            <!-- 🏀 LÍNEA DE TIEMPO CON BOTÓN PLAY/PAUSA -->
             <div class="timeline-bar">
-                <!-- Botón de ir al paso anterior -->
                 <button class="btn-action" id="btn-prev" onclick="cambiarPaso(-1)" disabled>◀ Paso Anterior</button>
-                
-                <!-- Indicador de en qué paso estamos -->
                 <div class="step-indicator" id="step-indicator">Paso: 1 / 1</div>
                 
-                <!-- ➕ Botón Añadir Paso (Ahora con su ID seguro y sin onclick directo) -->
+                <!-- ➕ Botón Añadir Paso -->
                 <button class="btn-action" id="btn-add-step">➕ Añadir Paso</button>
                 
-                <!-- 🗑️ NUEVO: Botón de Eliminar Paso con su ID de seguridad -->
+                <!-- ▶️ NUEVO: Botón de Reproducción Automática (Play/Pausa) -->
+                <button class="btn-action btn-play" id="btn-play-pause">▶ Reproducir</button>
+                
+                <!-- 🗑️ Botón de Eliminar Paso -->
                 <button class="btn-action btn-danger" id="btn-delete-step">🗑️ Eliminar Paso</button>
                 
-                <!-- Botón de ir al paso siguiente -->
                 <button class="btn-action" id="btn-next" onclick="cambiarPaso(1)" disabled>Siguiente Paso ▶</button>
             </div>
         </div>
