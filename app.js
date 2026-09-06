@@ -22,6 +22,13 @@ const POSICIONES_INICIALES = {
     'token-ball': { x: 45, y: 50 }
 };
 
+// =======================================================================
+// 🌟 NUEVO SITIO: VARIABLES DE ESTADO DEL REPRODUCTOR (MUDADAS AL TEJADO)
+// =======================================================================
+let reproductorIntervalo = null;
+let estaReproduciendo = false;
+const btnPlayPause = document.getElementById('btn-play-pause');
+
 // Variables de Estado de la Aplicación
 let rolActual = 'entrenador'; // 'entrenador' o 'admin'
 let jugadaPasos = []; // Secuencia de pasos tácticos en memoria
@@ -860,13 +867,6 @@ function aplicarPosicionesConAnimacion(posicionesDestino, duracion = 500) {
 // =======================================================================
 // ⏸️ REPRODUCTOR TÁCTICO AUTOMÁTICO (PLAY / PAUSA)
 // =======================================================================
-
-// 1. VARIABLES DE ESTADO DE TIEMPO (La memoria del reproductor) [Source 14]
-let reproductorIntervalo = null; // Almacenará el segundero activo en memoria
-let estaReproduciendo = false;    // Interruptor: true = encendido, false = apagado [Source 21]
-
-// Buscamos el botón físico que instalamos en el HTML
-const btnPlayPause = document.getElementById('btn-play-pause');
 
 /**
  * Función principal que se activa al pulsar el botón "Play/Pausa".
