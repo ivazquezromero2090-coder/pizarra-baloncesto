@@ -30,6 +30,8 @@ let estaReproduciendo = false;
 const btnPlayPause = document.getElementById('btn-play-pause');
 const btnAddStep = document.getElementById('btn-add-step');
 const btnDeleteStep = document.getElementById('btn-delete-step');
+// 🔌 Presentamos el botón de nueva jugada en la planta alta
+const btnClearAll = document.getElementById('btn-clear-all');
 
 // Variables de Estado de la Aplicación
 let rolActual = 'entrenador'; // 'entrenador' o 'admin'
@@ -76,6 +78,10 @@ if (btnPlayPause) {
 
 if (btnUndo) {
     btnUndo.addEventListener('click', deshacerUltimoMovimiento);
+}
+
+if (btnClearAll) {
+    btnClearAll.addEventListener('click', iniciarNuevaJugada);
 }
 
 // 1. INICIALIZAR LIENZO NUEVO
@@ -1053,4 +1059,48 @@ function cargarDesdeLocalStorage() {
         console.error("Error al leer desde el disco de la tablet:", error);
     }
     return false; // No había ninguna jugada guardada
+}
+
+// =======================================================================
+// 📄 SISTEMA DE REINICIO DE ESTADO: NUEVA JUGADA
+// =======================================================================
+
+/**
+ * Borra por completo el parqué clásico, vacía la memoria y destruye el historial.
+ * Devuelve la app al estado inicial de fábrica de forma segura.
+ */
+function iniciarNuevaJugada() {
+    // 🛡️ ESCUDO DE SEGURIDAD: Preguntamos al entrenador antes de borrar nada
+    const confirmarBorrado = confirm("⚠️ ¿Estás seguro de que quieres borrar TODA la pizarra para empezar una nueva jugada?\nEsto eliminará todos los pasos de la tablet y no se puede deshacer.");
+    
+    if (!confirmarBorrado) {
+        return; // El entrenador pulsó "Cancelar": salimos de la función sin tocar nada
+    }
+    
+    // 1. DETENER EL PLAY AUTOMÁTICO (Por seguridad, si estaba corriendo)
+    detenerReproduccion();
+    if (btnPlayPause) btnPlayPause.innerHTML = "▶ Reproducir";
+    
+    // 2. LIMPIEZA DE MEMORIA RAM (De vuelta a los valores originales de inicio)
+    pasoActivoIndex = 0;
+    historialMovimientos = []; // Vaciamos la pila de Deshacer
+    
+    // Volvemos a crear un arreglo con un único paso, usando clonación profunda
+    // para que las posiciones por defecto no se queden amarradas en memoria
+    jugadaPasos = [JSON.parse(JSON.stringify(POSICIONES_INICIALES))];
+    
+    tieneCambiosSinGuardar = false;
+    
+    // 3. LIMPIEZA DE MEMORIA PERSISTENTE (Trastocar el disco de la tablet)
+    localStorage.removeItem(CLAVE_LOCAL_STORAGE);
+    localStorage.removeItem('pizarra_paso_activo_index');
+    
+    // 4. REDIBUJAR LA PANTALLA
+    // Mandamos los jugadores a su sitio con una elegante animación de 400 milisegundos
+    aplicarPosicionesConAnimacion(POSICIONES_INICIALES, 400);
+    
+    // Actualizamos las etiquetas y botones del carrusel inferior
+    actualizarUI();
+    
+    mostrarToast("¡Pizarra reiniciada! Diseña una nueva estrategia. 🏀");
 }

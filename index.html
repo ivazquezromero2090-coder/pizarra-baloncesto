@@ -96,7 +96,7 @@
                 <div class="token ball" style="left: 45%; top: 50%;" id="token-ball"></div>
             </div>
 
-            <!-- 🏀 LÍNEA DE TIEMPO CON BOTÓN DESHACER INSTALADO -->
+            <!-- 🏀 LÍNEA DE TIEMPO CON BOTÓN NUEVA JUGADA -->
             <div class="timeline-bar">
                 <button class="btn-action" id="btn-prev" onclick="cambiarPaso(-1)" disabled>◀ Paso Anterior</button>
                 <div class="step-indicator" id="step-indicator">Paso: 1 / 1</div>
@@ -107,8 +107,11 @@
                 <!-- ▶️ Botón de Reproducción Automática -->
                 <button class="btn-action btn-play" id="btn-play-pause">▶ Reproducir</button>
                 
-                <!-- ↩️ NUEVO: Botón Deshacer -->
+                <!-- ↩️ Botón Deshacer -->
                 <button class="btn-action btn-undo" id="btn-undo">↩️ Deshacer</button>
+                
+                <!-- 📄 NUEVO: Botón Nueva Jugada (Color Peligro/Rojo) -->
+                <button class="btn-action btn-danger" id="btn-clear-all">📄 Nueva Jugada</button>
                 
                 <!-- 🗑️ Botón de Eliminar Paso -->
                 <button class="btn-action btn-danger" id="btn-delete-step">🗑️ Eliminar Paso</button>
