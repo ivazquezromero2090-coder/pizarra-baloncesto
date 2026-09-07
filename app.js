@@ -1,7 +1,7 @@
 // ==========================================
 // ☁️ CONFIGURACIÓN Y CONEXIÓN CON SUPABASE
 // ==========================================
-const SUPABASE_URL = "https://hlrlyyvddvtbvmzariuf.supabase.co/rest/v1/jugadas"; 
+const SUPABASE_URL = "https://hlrlyyvddvtbvmzariuf.supabase.co/rest/v1"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhscmx5eXZkZHZ0YnZtemFyaXVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNjYwOTcsImV4cCI6MjEwMzk0MjA5N30.68jzBUOJ0soaTTyNH1T4yRRsHxR0AZLq0nwjodbK7d4"; // Tu etiqueta original
 
 // 🔗 EL ALIAS MÁGICO: Decimos que SUPABASE_KEY es exactamente igual a SUPABASE_ANON_KEY [Source 14]
@@ -642,7 +642,7 @@ function comprobarConectividad() {
     }
 
     window.addEventListener('online', toggleStatus);
-    window.addEventListener('offline', toggleStatus);
+    window.addEventListener('offline', toggleStatus);fetch
     toggleStatus(); // Comprobación inicial
 }
 
@@ -1124,11 +1124,11 @@ async function abrirBiblioteca() {
     
     try { // 🛡️ Nuestro seguro anti-caídas de WiFi [6]
         // 🚦 Mandamos al mensajero y pausamos el tiempo (await) [1, 3]
-        const respuesta = await fetch(SUPABASE_URL, {
+        const respuesta = await fetch(`${SUPABASE_URL}/jugadas`, { // <─── ¡Le concatenamos /jugadas de forma segura! [18]
             method: 'GET',
             headers: {
                 'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}` // El pase de seguridad [2]
+                'Authorization': `Bearer ${SUPABASE_KEY}`
             }
         });
 
