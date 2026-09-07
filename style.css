@@ -329,9 +329,6 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.35),
                 inset 0 -3px 5px rgba(0, 0, 0, 0.3);
                 
-    /* Solo animamos cambios visuales de sombra y contorno (0.2s rápidos).
-       ¡NUNCA animamos 'top' ni 'left' aquí para evitar retardos al arrastrar! */
-    transition: box-shadow 0.2s ease;
 }
 
 /* 🎬 CLASE DE ANIMACIÓN DINÁMICA (CONTROLADA POR JAVASCRIPT)

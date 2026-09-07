@@ -790,17 +790,18 @@ window.addEventListener('load', () => {
     const seHaRecuperadoJugada = cargarDesdeLocalStorage();
     
     if (seHaRecuperadoJugada) {
-        // Si había datos, empezamos mostrando el primer paso guardado
-        pasoActivoIndex = 0;
+        // 🔖 NUEVO: Leemos el marcapáginas del disco. 
+        // Si no existe nada guardado aún, por defecto empezamos en el paso 0.
+        // Usamos parseInt() para convertir el texto "2" en el número real 2.
+        const pasoGuardado = localStorage.getItem('pizarra_paso_activo_index');
+        pasoActivoIndex = pasoGuardado ? parseInt(pasoGuardado) : 0;
         
-        // Colocamos las fichas en su sitio al instante (con 0 milisegundos de transición)
+        // Colocamos las fichas en su sitio correspondiente de ese paso recuperado
         aplicarPosicionesConAnimacion(jugadaPasos[pasoActivoIndex], 0);
         
-        // Actualizamos los textos de la barra inferior (Paso: 1 / Total)
         actualizarUI();
-        mostrarToast("¡Jugada recuperada del almacenamiento local! 🏀");
+        mostrarToast("¡Jugada y paso actual recuperados con éxito! 🏀");
     } else {
-        // SINO (Si es la primera vez que abre la app), creamos un lienzo limpio por defecto
         inicializarLienzoNuevo();
     }
     
@@ -1023,13 +1024,14 @@ const CLAVE_LOCAL_STORAGE = 'pizarra_tactica_jugada_activa';
  */
 function guardarEnLocalStorage() {
     try {
-        // 1. Serialización: Convertimos el arreglo jugadaPasos en texto plano
         const jugadaEnTexto = JSON.stringify(jugadaPasos);
-        
-        // 2. Almacenamiento: Guardamos el texto bajo nuestra etiqueta única
         localStorage.setItem(CLAVE_LOCAL_STORAGE, jugadaEnTexto);
+        
+        // 🔖 NUEVO: Guardamos también el marcapáginas (el paso en el que estamos parados)
+        localStorage.setItem('pizarra_paso_activo_index', pasoActivoIndex);
+        
     } catch (error) {
-        console.error("Error al guardar en el disco de la tablet:", error);
+        console.error("Error al guardar en el disco:", error);
     }
 }
 
