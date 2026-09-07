@@ -2,7 +2,7 @@
 // ☁️ CONFIGURACIÓN Y CONEXIÓN CON SUPABASE
 // ==========================================
 const SUPABASE_URL = "https://hlrlyyvddvtbvmzariuf.supabase.co/rest/v1/jugadas"; 
-const SUPABASE_ANON_KEY = "sb_publishable_X-hpA6s1Zeo7aLpT608fIQ_ig_qB0Ie";
+const SUPABASE_KEY = "sb_publishable_X-hpA6s1Zeo7aLpT608fIQ_ig_qB0Ie";
 
 const MI_EMAIL = 'carlos@escuelabaloncesto.com';
 
