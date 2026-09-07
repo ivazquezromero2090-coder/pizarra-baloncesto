@@ -334,7 +334,6 @@ body {
 /* 🎬 CLASE DE ANIMACIÓN DINÁMICA (CONTROLADA POR JAVASCRIPT)
    Se activa únicamente cuando las fichas viajan solas entre fases de la jugada */
 .animate-transition {
-    transition: left 0.6s ease-in-out, top 0.6s ease-in-out;
 }
 
 @media (min-width: 950px) {
