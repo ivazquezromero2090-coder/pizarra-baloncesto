@@ -175,15 +175,18 @@ function configurarArrastre() {
     }
 
     function stopDrag() {
-        if (isDragging && activeToken) {
-            const xPercent = parseFloat(activeToken.style.left) || 0;
-            const yPercent = parseFloat(activeToken.style.top) || 0;
-            
-            jugadaPasos[pasoActivoIndex][activeToken.id] = { x: xPercent, y: yPercent };
-            tieneCambiosSinGuardar = true;
-        }
-        isDragging = false;
-        activeToken = null;
+    if (isDragging && activeToken) {
+        const xPercent = parseFloat(activeToken.style.left) || 0;
+        const yPercent = parseFloat(activeToken.style.top) || 0;
+        
+        jugadaPasos[pasoActivoIndex][activeToken.id] = { x: xPercent, y: yPercent };
+        tieneCambiosSinGuardar = true;
+        
+        // 💾 GUARDADO AUTOMÁTICO AL SOLTAR LA FICHA:
+        guardarEnLocalStorage();
+    }
+    isDragging = false;
+    activeToken = null;
     }
 
     // Instalamos los cables de escucha en la pantalla [Source 19]
@@ -744,6 +747,8 @@ function agregarNuevoPaso() {
     // 4. Actualizamos la pantalla de tu tablet
     actualizarUI(); 
     mostrarToast(`Paso ${jugadaPasos.length} creado.`);
+
+    guardarEnLocalStorage();
 }
 
 // Función para eliminar el paso actual con confirmación segura
@@ -770,6 +775,8 @@ function eliminarPasoActual() {
     actualizarUI();
     aplicarPosicionesPantalla(jugadaPasos[pasoActivoIndex]);
     mostrarToast("Paso eliminado con éxito.");
+
+    guardarEnLocalStorage();
 }
 
 // =======================================================================
@@ -778,17 +785,34 @@ function eliminarPasoActual() {
 
 // Conectamos los cables cuando la ventana termine de cargar
 window.addEventListener('load', () => {
-    // Si el navegador encuentra el botón de Añadir Paso...
-    if (btnAddStep) {
-        // ...le asocia nuestra función segura con límite de 10 pasos
-        btnAddStep.addEventListener('click', agregarNuevoPaso);
+    // 🧠 DECISIÓN INTELIGENTE DE CARGA:
+    // Intentamos buscar si el entrenador dejó una jugada a medias en su disco local
+    const seHaRecuperadoJugada = cargarDesdeLocalStorage();
+    
+    if (seHaRecuperadoJugada) {
+        // Si había datos, empezamos mostrando el primer paso guardado
+        pasoActivoIndex = 0;
+        
+        // Colocamos las fichas en su sitio al instante (con 0 milisegundos de transición)
+        aplicarPosicionesConAnimacion(jugadaPasos[pasoActivoIndex], 0);
+        
+        // Actualizamos los textos de la barra inferior (Paso: 1 / Total)
+        actualizarUI();
+        mostrarToast("¡Jugada recuperada del almacenamiento local! 🏀");
+    } else {
+        // SINO (Si es la primera vez que abre la app), creamos un lienzo limpio por defecto
+        inicializarLienzoNuevo();
     }
     
-    // Si el navegador encuentra el botón de la Papelera...
-    if (btnDeleteStep) {
-        // ...le asocia nuestra confirmación segura antes de borrar
-        btnDeleteStep.addEventListener('click', eliminarPasoActual);
-    }
+    // El resto de tus inicializaciones siguen igual abajo:
+    configurarArrastre();
+    comprobarConectividad();
+    
+    // Conexiones de tus botones unificados
+    if (btnPlayPause) btnPlayPause.addEventListener('click', alternarReproduccion);
+    if (btnUndo) btnUndo.addEventListener('click', deshacerUltimoMovimiento);
+    if (btnAddStep) btnAddStep.addEventListener('click', agregarNuevoPaso);
+    if (btnDeleteStep) btnDeleteStep.addEventListener('click', eliminarPasoActual);
 });
 
 // =======================================================================
@@ -984,4 +1008,47 @@ function deshacerUltimoMovimiento() {
     // 4. Actualizamos la pantalla de tu tablet
     actualizarUI();
     mostrarToast("Movimiento deshecho.");
+}
+
+// =======================================================================
+// 💾 SISTEMA DE PERSISTENCIA LOCAL (LOCALSTORAGE)
+// =======================================================================
+
+// La "etiqueta" única que usará nuestra app en el disco de la tablet
+const CLAVE_LOCAL_STORAGE = 'pizarra_tactica_jugada_activa';
+
+/**
+ * Guarda automáticamente la secuencia entera de pasos en el disco local.
+ * Se ejecuta de forma silenciosa cada vez que hay un cambio táctico.
+ */
+function guardarEnLocalStorage() {
+    try {
+        // 1. Serialización: Convertimos el arreglo jugadaPasos en texto plano
+        const jugadaEnTexto = JSON.stringify(jugadaPasos);
+        
+        // 2. Almacenamiento: Guardamos el texto bajo nuestra etiqueta única
+        localStorage.setItem(CLAVE_LOCAL_STORAGE, jugadaEnTexto);
+    } catch (error) {
+        console.error("Error al guardar en el disco de la tablet:", error);
+    }
+}
+
+/**
+ * Intenta recuperar la jugada anterior guardada en el disco local.
+ * Devuelve 'true' si recuperó datos con éxito, o 'false' si el cuaderno estaba en blanco.
+ */
+function cargarDesdeLocalStorage() {
+    try {
+        // 1. Lectura: Buscamos si existe la etiqueta en el disco
+        const textoRecuperado = localStorage.getItem(CLAVE_LOCAL_STORAGE);
+        
+        if (textoRecuperado) {
+            // 2. Deserialización: Convertimos el texto de vuelta al arreglo de pasos interactivos
+            jugadaPasos = JSON.parse(textoRecuperado);
+            return true;
+        }
+    } catch (error) {
+        console.error("Error al leer desde el disco de la tablet:", error);
+    }
+    return false; // No había ninguna jugada guardada
 }
