@@ -1,7 +1,7 @@
 // ==========================================
 // ☁️ CONFIGURACIÓN Y CONEXIÓN CON SUPABASE
 // ==========================================
-const SUPABASE_URL = "https://hlrlyyvddvtbvmzariuf.supabase.co/rest/v1/jugadas"; 
+const SUPABASE_URL = "https://hlrlyyvddvtbvmzariuf.supabase.co"; 
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhscmx5eXZkZHZ0YnZtemFyaXVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNjYwOTcsImV4cCI6MjEwMzk0MjA5N30.68jzBUOJ0soaTTyNH1T4yRRsHxR0AZLq0nwjodbK7d4"; // Tu etiqueta original
 
 // 🔗 EL ALIAS MÁGICO: Decimos que SUPABASE_KEY es exactamente igual a SUPABASE_ANON_KEY [Source 14]
@@ -1124,7 +1124,7 @@ async function abrirBiblioteca() {
     
     try { // 🛡️ Nuestro seguro anti-caídas de WiFi [6]
         // 🚦 Mandamos al mensajero y pausamos el tiempo (await) [1, 3]
-        const respuesta = await fetch(SUPABASE_URL, { // <─── ¡Deja solo SUPABASE_URL sin el "/jugadas" al final!
+        const respuesta = await fetch(`${SUPABASE_URL}/rest/v1/jugadas`, { // <─── ¡Concatenamos la ruta oficial completa!
             method: 'GET',
             headers: {
                 'apikey': SUPABASE_KEY,
