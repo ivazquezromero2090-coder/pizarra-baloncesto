@@ -2,7 +2,7 @@
 // ☁️ CONFIGURACIÓN Y CONEXIÓN CON SUPABASE
 // ==========================================
 const SUPABASE_URL = "https://hlrlyyvddvtbvmzariuf.supabase.co/rest/v1/jugadas"; 
-const SUPABASE_ANON_KEY = "sb_publishable_X-hpA6s1Zeo7aLpT608fIQ_ig_qB0Ie"; // Tu etiqueta original
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhscmx5eXZkZHZ0YnZtemFyaXVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgzNjYwOTcsImV4cCI6MjEwMzk0MjA5N30.68jzBUOJ0soaTTyNH1T4yRRsHxR0AZLq0nwjodbK7d4"; // Tu etiqueta original
 
 // 🔗 EL ALIAS MÁGICO: Decimos que SUPABASE_KEY es exactamente igual a SUPABASE_ANON_KEY [Source 14]
 // Así, el código de la biblioteca encuentra la llave bajo su nuevo nombre sin romper la línea 10.
