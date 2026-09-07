@@ -15,31 +15,36 @@
     <div class="app-container">
         
         <!-- 1. COLUMNA IZQUIERDA: BIBLIOTECA -->
-        <div class="sidebar">
-            <!-- Selector de Roles -->
-            <div class="role-selector">
-                <button class="role-btn active" id="btn-role-coach" onclick="cambiarRol('entrenador')">Entrenador</button>
-                <button class="role-btn" id="btn-role-admin" onclick="cambiarRol('admin')">Admin Escuela</button>
+    <div class="sidebar">
+        <!-- Selector de Roles -->
+        <div class="role-selector">
+            <button class="role-btn active" id="btn-role-coach" onclick="cambiarRol('entrenador')">Entrenador</button>
+            <button class="role-btn" id="btn-role-admin" onclick="cambiarRol('admin')">Admin Escuela</button>
+        </div>
+
+        <!-- Botón de Nueva Jugada (OPCIÓN B) -->
+        <button class="btn-new-play" onclick="nuevaJugada()">
+            <span>➕ Nueva Jugada</span>
+        </button>
+
+        <!-- 📂 NUEVO: BOTÓN FÍSICO PARA ABRIR LA BIBLIOTECA EN LA NUBE -->
+        <button class="btn-new-play" onclick="abrirBiblioteca()" style="margin-top: 10px; background-color: #2e7d32; border-color: #1b5e20;">
+            <span>📂 Abrir Biblioteca</span>
+        </button>
+
+        <!-- Secciones de la Biblioteca Lateral (Se quedan como archivo alternativo) -->
+        <div class="library-section">
+            <h3>Mis Jugadas</h3>
+            <div class="plays-list" id="list-personal">
+                <!-- Se llena automáticamente con JavaScript -->
             </div>
 
-            <!-- Botón de Nueva Jugada (OPCIÓN B) -->
-            <button class="btn-new-play" onclick="nuevaJugada()">
-                <span>➕ Nueva Jugada</span>
-            </button>
-
-            <!-- Secciones de la Biblioteca -->
-            <div class="library-section">
-                <h3>Mis Jugadas</h3>
-                <div class="plays-list" id="list-personal">
-                    <!-- Se llena automáticamente con JavaScript -->
-                </div>
-
-                <h3>Jugadas de la Escuela</h3>
-                <div class="plays-list" id="list-school">
-                    <!-- Se llena automáticamente con JavaScript -->
-                </div>
+            <h3>Jugadas de la Escuela</h3>
+            <div class="plays-list" id="list-school">
+                <!-- Se llena automáticamente con JavaScript -->
             </div>
         </div>
+    </div>
 
         <!-- 2. COLUMNA DERECHA: PIZARRA Y CONTROLES -->
         <div class="main-panel">
@@ -127,5 +132,26 @@
 
     <!-- ⚡ CONEXIÓN CON EL CEREBRO DE LA CASA (LÓGICA JAVASCRIPT) -->
     <script src="app.js"></script>
+
+    <!-- 📂 MODAL DE LA BIBLIOTECA DE JUGADAS -->
+<div id="modal-biblioteca" style="display: none; position: fixed; top: 10%; left: 10%; width: 80%; height: 80%; background: white; border: 2px solid black; z-index: 1000; padding: 20px;">
+    <h2>📂 Biblioteca de Estrategias en la Nube</h2>
+    
+    <div style="display: flex; gap: 20px; height: 85%;">
+        <!-- Columna Izquierda: La Escuela -->
+        <div style="flex: 1; border-right: 2px solid gray; padding-right: 10px; overflow-y: auto;">
+            <h3>🎒 Jugadas de la Escuela (Oficiales)</h3>
+            <div id="lista-oficiales">Cargando...</div>
+        </div>
+        
+        <!-- Columna Derecha: El Entrenador -->
+        <div style="flex: 1; padding-left: 10px; overflow-y: auto;">
+            <h3>👤 Mis Jugadas Personales</h3>
+            <div id="lista-personales">Cargando...</div>
+        </div>
+    </div>
+    
+    <button onclick="cerrarBiblioteca()" style="margin-top: 10px; background: red; color: white;">❌ Cerrar</button>
+</div>
 </body>
 </html>

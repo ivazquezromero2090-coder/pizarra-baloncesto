@@ -1,8 +1,10 @@
 // ==========================================
 // ☁️ CONFIGURACIÓN Y CONEXIÓN CON SUPABASE
 // ==========================================
-const SUPABASE_URL = "https://hlrlyyvddvtbvmzariuf.supabase.co"; 
+const SUPABASE_URL = "https://hlrlyyvddvtbvmzariuf.supabase.co/rest/v1/jugadas"; 
 const SUPABASE_ANON_KEY = "sb_publishable_X-hpA6s1Zeo7aLpT608fIQ_ig_qB0Ie";
+
+const MI_EMAIL = 'carlos@escuelabaloncesto.com';
 
 // 🌟 Renombramos a 'supabaseClient' para evitar que choque con el CDN
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -1104,3 +1106,86 @@ function iniciarNuevaJugada() {
     
     mostrarToast("¡Pizarra reiniciada! Diseña una nueva estrategia. 🏀");
 }
+
+// =======================================================================
+// ☁️ SISTEMA CLIENTE-SERVIDOR: LA BIBLIOTECA TÁCTICA
+// =======================================================================
+
+/**
+ * 1. EL MENSAJERO: Va a Supabase, busca las jugadas y espera la respuesta [1].
+ */
+async function abrirBiblioteca() {
+    // Mostramos la ventana de madera en la pantalla
+    document.getElementById('modal-biblioteca').style.display = 'block';
+    
+    try { // 🛡️ Nuestro seguro anti-caídas de WiFi [6]
+        // 🚦 Mandamos al mensajero y pausamos el tiempo (await) [1, 3]
+        const respuesta = await fetch(SUPABASE_URL, {
+            method: 'GET',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}` // El pase de seguridad [2]
+            }
+        });
+
+        if (!respuesta.ok) throw new Error("Error en la aduana de Supabase");
+
+        // Convertimos la caja fuerte en un Array de objetos interactivos [4]
+        const listaJugadas = await respuesta.json();
+        
+        // Le pasamos el arreglo fresco a nuestro ayudante para que pinte [8]
+        pintarTablonDeJugadas(listaJugadas);
+        
+    } catch (error) {
+        console.error(error);
+        alert("Sin conexión al pabellón. Revisa tu internet.");
+    }
+}
+
+/**
+ * 2. EL AYUDANTE (BUCLE): Limpia el corcho y cuelga los folios nuevos [11, 12].
+ */
+function pintarTablonDeJugadas(jugadas) {
+    const columnaOficiales = document.getElementById('lista-oficiales');
+    const columnaPersonales = document.getElementById('lista-personales');
+
+    // 🧹 PASO CLAVE: Vaciamos el tablón visual para evitar duplicados infinitos
+    columnaOficiales.innerHTML = '';
+    columnaPersonales.innerHTML = '';
+
+    // 🔄 Iteramos la caja de jugadas una por una [12]
+    jugadas.forEach(jugada => {
+        
+        // Fabricamos la tarjeta visual usando "Plantillas Literales" (Backticks)
+        // El operador ternario (?) decide si pinta el botón de borrar [13, 14]
+        const tarjetaHTML = `
+            <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
+                <h4 style="margin: 0 0 10px 0;">🏀 ${jugada.nombre}</h4>
+                <button onclick="cargarJugadaEnCancha('${jugada.id}')">👁️ Abrir</button>
+                
+                ${jugada.es_oficial === false ? 
+                    `<button style="background: red; color: white;" onclick="borrarJugada('${jugada.id}')">🗑️ Borrar</button>` 
+                    : ''}
+            </div>
+        `;
+
+        // 🗂️ A la aduana: ¿Es de la escuela o es personal?
+        if (jugada.es_oficial === true) {
+            columnaOficiales.innerHTML += tarjetaHTML;
+        } else if (jugada.creador_email === MI_EMAIL) {
+            columnaPersonales.innerHTML += tarjetaHTML;
+        }
+    });
+
+    // Estado vacío si no hay jugadas [15]
+    if(columnaOficiales.innerHTML === '') columnaOficiales.innerHTML = '<i>No hay jugadas oficiales.</i>';
+    if(columnaPersonales.innerHTML === '') columnaPersonales.innerHTML = '<i>Empieza a crear tus propias estrategias.</i>';
+}
+
+function cerrarBiblioteca() {
+    document.getElementById('modal-biblioteca').style.display = 'none';
+}
+
+// ⚠️ Mocks vacíos para que los botones no den error al pulsarlos hoy
+function cargarJugadaEnCancha(id) { alert("¡Pronto cargaremos la jugada " + id + " en el parqué!"); }
+function borrarJugada(id) { alert("¡Pronto borraremos la jugada " + id + " de la nube!"); }
