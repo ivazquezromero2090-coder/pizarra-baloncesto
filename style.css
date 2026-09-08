@@ -539,31 +539,24 @@ body.modo-presentador-activo .court-container {
 
 
 /* =========================================================================
-   ⚙️ CONTROL DE ESTADOS DINÁMICOS (EL SEMÁFORO DE PERMISOS)
+   ⚙️ CONTROL DE ESTADOS DE TU BOTONERA REAL
    ========================================================================= */
 
-/* 🛡️ CASO 1: Entrenador de Base viendo Jugada Oficial de la Escuela (SOLO LECTURA)
+/* 🛡️ CASO: Entrenador de Base viendo Jugada Oficial de la Escuela (SOLO LECTURA)
    Si el cuerpo tiene las clases 'rol-entrenador' Y 'jugada-oficial' al mismo tiempo: */
-   
-body.rol-entrenador.jugada-oficial .btn-new-play,
-body.rol-entrenador.jugada-oficial #btn-delete-step {
-    display: none !important;    /* 🚫 Escondemos los botones de crear y borrar pasos */
+
+/* 1. Escondemos tu botón de guardar oficial (el que tiene la clase primary) */
+body.rol-entrenador.jugada-oficial .btn-action.primary {
+    display: none !important; 
 }
 
-body.rol-entrenador.jugada-oficial .btn-duplicar {
-    display: block !important;   /* 🐑 ¡Hacemos visible el botón de duplicar jugada! */
+/* 2. Mostramos tu botón de duplicar (le quitamos el 'display: none' que lleva en el HTML) */
+body.rol-entrenador.jugada-oficial #btn-duplicate {
+    display: inline-block !important; /* ¡Aparece en fila junto a los demás! */
 }
 
-/* El candado visual de la cancha de baloncesto */
+/* 3. Bloqueamos el parqué de la cancha de baloncesto */
 body.rol-entrenador.jugada-oficial .court-container {
-    pointer-events: none;        /* 🔒 Vitrina de cristal: el dedo pasa de largo, no mueve fichas */
-    opacity: 0.90;               /* La cancha se oscurece un 10% para indicar "Solo Lectura" */
-}
-
-
-/* 👑 CASO 2: Administrador de la Escuela (CONTROL ABSOLUTO)
-   Si el cuerpo tiene la clase de administrador, nunca necesita duplicar: */
-   
-body.rol-admin .btn-duplicar {
-    display: none !important;    /* El administrador edita la oficial directamente, no duplica */
+    pointer-events: none; /* Vitrina de cristal: se ve pero no se puede tocar */
+    opacity: 0.90;        /* Se atenúa ligeramente para indicar lectura */
 }
