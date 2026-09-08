@@ -442,8 +442,13 @@ body.modo-presentador-activo .control-bar {
     display: none !important; /* 🚫 Se esconde el panel de guardado y dibujo */
 }
 
+/* Ocultamos la linea del tiempo */
+body.modo-presentador-activo .timeline-bar {
+    display: none !important; /* 🚫 Se esconde el panel de guardado y dibujo */
+}
+
 /* Forzamos a que la cancha ocupe el 100% de la pantalla táctil */
-body.modo-presentador-activo #contenedor-cancha {
+body.modo-presentador-activo .court-container {
     width: 100% !important; /* 📐 La cancha se expande a lo ancho del dispositivo */
     margin: 0 !important; /* 📐 Eliminamos márgenes sobrantes que desalineen el dibujo */
 }
