@@ -656,22 +656,7 @@ function actualizarUI() {
 
     // 4. Calculamos el interruptor maestro de Solo Lectura (¡Tu gran acierto!)
     const isReadOnly = (esJugadaOficialActiva && rolActual === 'entrenador');
-
-    // 🔒 [NUEVA LÓGICA DE CONTROL]: El candado de borrado
-    // Localizamos tu botón de borrar jugada (ajusta 'btnDelete' si en tu app se llama diferente)
-    const botonBorrarReal = document.getElementById('btn-delete-play') || document.querySelector('.btn-delete');
-    
-    if (botonBorrarReal) {
-        // SI es de solo lectura (coach en jugada oficial) -> OCULTAMOS la papelera
-        // SI NO (es personal o eres admin) -> MOSTRAMOS la papelera para que puedas borrar
-        botonBorrarReal.style.display = isReadOnly ? 'none' : 'inline-block';
     }
-
-    // 5. Bloqueamos el parqué de la cancha (los cursores de las fichas)
-    tokens.forEach(token => {
-        token.style.cursor = isReadOnly ? 'not-allowed' : 'grab';
-    });
-}
 
 // 15. RED Y CONECTIVIDAD (ONLINE / OFFLINE)
 function comprobarConectividad() {
