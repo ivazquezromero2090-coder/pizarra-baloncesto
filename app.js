@@ -1195,100 +1195,106 @@ function cargarJugadaEnCancha(id) { alert("¡Pronto cargaremos la jugada " + id 
 function borrarJugada(id) { alert("¡Pronto borraremos la jugada " + id + " de la nube!"); }
 
 // =========================================================================
-// 🧠 CEREBRO DEL MODO PRESENTADOR (CONTROL DE ESTADOS Y NAVEGACIÓN)
+// 🧠 CEREBRO DEL MODO PRESENTADOR (VERSION DE ALTO RENDIMIENTO)
 // =========================================================================
 
-// 1. MEMORIA TEMPORAL (Variables de Estado de la Pizarra)
-let esModoPresentador = false; // 💡 Interruptor: false = modo edición, true = modo charla táctica
-let pasoActualIndex = 0;       // 📖 Índice del paso actual en pantalla (el ordenador empieza a contar en 0)
+// 1. Variable de Estado Local (Solo para saber si el proyector está encendido)
+let esModoPresentador = false; 
 
-// 2. FUNCIÓN PRINCIPAL: El interruptor que apaga y enciende el proyector
+// 2. FUNCIÓN DE CONMUTACIÓN: Apaga y enciende el modo presentador
 function alternarModoPresentador() {
-    // Invertimos el interruptor: si era false pasa a true, si era true pasa a false
     esModoPresentador = !esModoPresentador; 
 
-    // Buscamos el elemento raíz del HTML (el cuerpo de la página)
     const cuerpoPantalla = document.body;
 
     if (esModoPresentador) {
         // 🚪 ENTRADA AL MODO PRESENTACIÓN
-        cuerpoPantalla.classList.add("modo-presentador-activo"); // CSS ocultará el lateral de Supabase
-        bloquearArrastreFichas(true);                           // Atornillamos las fichas a la cancha
-        pasoActualIndex = 0;                                    // Reiniciamos la jugada al paso inicial (Paso 1)
-        mostrarPasoActivo(pasoActualIndex);                     // Ordenamos dibujar la posición del paso inicial
+        cuerpoPantalla.classList.add("modo-presentador-activo"); // CSS oculta el menú lateral y barra superior
+        bloquearArrastreFichas(true);                           // Bloqueamos el arrastre táctil para evitar fallos
+        
+        pasoActivoIndex = 0;                                    // Reiniciamos al Paso 1 (Índice 0 en programación)
+        actualizarUI();                                         // Pintamos la posición inicial en la cancha
+        actualizarMarcadorPantalla();                           // Actualizamos el marcador "Paso 1 de X"
     } else {
         // 🚪 SALIDA DEL MODO PRESENTACIÓN
-        cuerpoPantalla.classList.remove("modo-presentador-activo"); // CSS devuelve la interfaz de edición
-        bloquearArrastreFichas(false);                              // Desbloqueamos las fichas para volver a diseñar
+        cuerpoPantalla.classList.remove("modo-presentador-activo"); // CSS devuelve las herramientas de diseño
+        bloquearArrastreFichas(false);                              // Desbloqueamos las fichas para poder editar
+        actualizarUI();                                             // Refrescamos la pantalla para normalizar
     }
 }
 
-// 3. FUNCIÓN AUXILIAR: Bloquea o desbloquea las fichas tácticas en el tablero
+// 3. FUNCIÓN AUXILIAR: Evita que el dedo mueva fichas sin querer durante la charla
 function bloquearArrastreFichas(bloquear) {
-    // Buscamos todas las fichas interactivas en la cancha de baloncesto
+    // Buscamos todas las fichas y el balón en tu cancha
     const fichas = document.querySelectorAll(".ficha, .ball"); 
     
     fichas.forEach(ficha => {
-        // Si bloquear es true, quitamos el arrastre (draggable = false); si es false, lo activamos
+        // Si bloquear es true, draggable se vuelve "false"
         ficha.setAttribute("draggable", bloquear ? "false" : "true");
     });
 }
 
-// 4. FUNCIÓN AUXILIAR: Actualiza el marcador dinámico de lectura (Ej: "Paso 2 de 5")
+// 4. FUNCIÓN AUXILIAR: Actualiza el cartel informativo y apaga/enciende botones en los límites
 function actualizarMarcadorPantalla() {
     const marcador = document.getElementById("marcador-pasos");
+    const totalPasos = jugadaPasos.length; // Usamos tu variable real de pasos
     
-    // Obtenemos el total de pasos que tiene la jugada activa actualmente
-    const totalPasos = pasosJugada.length; 
-    
-    // Mostramos al humano "Paso X de Y" (sumamos 1 al índice porque el humano no cuenta desde 0)
-    marcador.textContent = `Paso ${pasoActualIndex + 1} de ${totalPasos}`;
+    // Mostramos al entrenador el paso actual (sumando 1 porque el humano no cuenta desde 0)
+    marcador.textContent = `Paso ${pasoActivoIndex + 1} de ${totalPasos}`;
+
+    // 🛡️ CONTROL DE LÍMITES TÁCTILES: Apagamos los botones si no se pueden usar
+    const btnAnterior = document.getElementById("btn-presentador-anterior");
+    const btnSiguiente = document.getElementById("btn-presentador-siguiente");
+
+    // Si estamos en el primer paso (índice 0), apagamos el botón Anterior
+    btnAnterior.disabled = (pasoActivoIndex === 0);
+
+    // Si estamos en el último paso (índice total - 1), apagamos el botón Siguiente
+    btnSiguiente.disabled = (pasoActivoIndex === totalPasos - 1);
 }
 
-// 5. FUNCIÓN AUXILIAR: Solicita a tu pizarra que dibuje y deslice las fichas al paso indicado
-function mostrarPasoActivo(index) {
-    // Llamamos a tu función original encargada de pintar y animar el fotograma
-    cargarPasoDeLaJugada(index); 
-    
-    // Sincronizamos el cartel informativo de la barra
-    actualizarMarcadorPantalla();
-}
-
-// 6. CONTROLADORES DE DIRECCIÓN (Navegación Segura con Escudo Condicional)
+// 5. CONTROLADORES DE NAVEGACIÓN SEGURA (Tus flechas de avance y retroceso)
 function irAlPasoSiguiente() {
-    const totalPasos = pasosJugada.length;
+    const totalPasos = jugadaPasos.length;
     
-    // 🛡️ ESCUDO DE SEGURIDAD: Solo avanzamos si no estamos en el último paso (índice menor que total - 1)
-    if (pasoActualIndex < totalPasos - 1) {
-        pasoActualIndex++;                    // Incrementamos en 1 el contador de página
-        mostrarPasoActivo(pasoActualIndex);   // Desplazamos las fichas al siguiente fotograma
+    // Escudo de seguridad: solo avanzamos si no es el último paso
+    if (pasoActivoIndex < totalPasos - 1) {
+        pasoActivoIndex++;             // Avanzamos el cursor
+        actualizarUI();                // Ordenamos a tu motor original redibujar la cancha
+        actualizarMarcadorPantalla();  // Actualizamos el texto y los estados de los botones
     }
 }
 
 function irAlPasoAnterior() {
-    // 🛡️ ESCUDO DE SEGURIDAD: Solo retrocedemos si no estamos en el primer paso (índice mayor que 0)
-    if (pasoActualIndex > 0) {
-        pasoActualIndex--;                    // Restamos 1 al contador de página
-        mostrarPasoActivo(pasoActualIndex);   // Desplazamos las fichas al fotograma anterior
+    // Escudo de seguridad: solo retrocedemos si no es el primer paso
+    if (pasoActivoIndex > 0) {
+        pasoActivoIndex--;             // Retrocedemos el cursor
+        actualizarUI();                // Ordenamos a tu motor original redibujar la cancha
+        actualizarMarcadorPantalla();  // Actualizamos el texto y los estados de los botones
     }
 }
 
 // =========================================================================
-// 🔌 CONEXIONES FÍSICAS (Enlazar botones HTML con el cerebro JS)
+// 🔌 CONEXIONES FÍSICAS (DOMContentLoaded)
 // =========================================================================
 document.addEventListener("DOMContentLoaded", () => {
-    // Enlazamos el clic de tus botones táctiles con nuestras funciones lógicas
+    // Conexión del botón de entrar (el que añadimos a tu barra superior)
+    const btnEntrar = document.getElementById("btn-entrar-presentador");
+    if (btnEntrar) {
+        btnEntrar.addEventListener("click", alternarModoPresentador);
+    }
+
+    // Conexión de los botones de la barra inferior del presentador
     document.getElementById("btn-presentador-salir").addEventListener("click", alternarModoPresentador);
     document.getElementById("btn-presentador-siguiente").addEventListener("click", irAlPasoSiguiente);
     document.getElementById("btn-presentador-anterior").addEventListener("click", irAlPasoAnterior);
-    document.getElementById("btn-entrar-presentador").addEventListener("click", alternarModoPresentador);
-
-    // Enlace de teclado físico opcional para cuando el ordenador esté proyectando en el vestuario
+    
+    // Atajos de teclado físicos (Por si usas ordenador o teclado inalámbrico)
     document.addEventListener("keydown", (evento) => {
-        if (!esModoPresentador) return; // Si la bombilla está apagada, ignoramos el teclado
+        if (!esModoPresentador) return; // Si el proyector está apagado, ignoramos el teclado
         
-        if (evento.key === "Escape") alternarModoPresentador(); // Tecla Esc = Salir
-        if (evento.key === "ArrowRight") irAlPasoSiguiente();   // Flecha derecha = Avanzar
-        if (evento.key === "ArrowLeft") irAlPasoAnterior();     // Flecha izquierda = Retroceder
+        if (evento.key === "Escape") alternarModoPresentador();
+        if (evento.key === "ArrowRight") irAlPasoSiguiente();
+        if (evento.key === "ArrowLeft") irAlPasoAnterior();
     });
 });
