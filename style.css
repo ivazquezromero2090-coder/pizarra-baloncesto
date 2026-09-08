@@ -485,3 +485,85 @@ body.modo-presentador-activo .court-container {
     font-weight: bold; /* 👁️ Letra gruesa */
     font-size: 1.1rem; /* 👁️ Tamaño cómodo de leer para el entrenador */
 }
+
+/* =========================================================================
+   🎨 IDENTIDAD VISUAL DEL CLUB (VERDE Y AZUL)
+   ========================================================================= */
+
+/* 👑 Insignia de Jugada Oficial de la Escuela (Verde) */
+.badge-oficial {
+    background-color: #2e7d32;   /* Verde bosque: transmite oficialidad y éxito */
+    color: #ffffff;              /* Texto blanco para que resalte */
+    font-size: 11px;             /* Letra compacta para no saturar el menú */
+    font-weight: bold;           /* Letra gruesa de pizarra */
+    padding: 3px 8px;            /* Espacio interno para que parezca una pastilla */
+    border-radius: 12px;         /* Bordes redondeados y suaves */
+    text-transform: uppercase;   /* Forzamos letras mayúsculas */
+    display: inline-flex;        /* Centramos el texto y un posible icono alineados */
+    align-items: center;
+    gap: 4px;                    /* Distancia de seguridad entre el icono y el texto */
+}
+
+/* 📂 Insignia de Borrador Personal del Entrenador (Azul) */
+.badge-privado {
+    background-color: #1565c0;   /* Azul corporativo: transmite estrategia y calma */
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* 🐑 Botón Gigante de Duplicar Jugada (Azul Eléctrico) */
+.btn-duplicar {
+    background-color: #0d47a1;   /* Azul fuerte para llamar la atención del dedo */
+    border: 2px solid #0a3c85;   /* Borde de seguridad un tono más oscuro */
+    color: #ffffff;
+    padding: 12px 24px;          /* Dimensiones táctiles gigantes (fácil de pulsar) */
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 8px;          /* Esquinas redondeadas de botón moderno */
+    cursor: pointer;             /* Cambia el cursor a mano para indicar que es clicable */
+    display: none;               /* 👁️ Por defecto está oculto (solo aparece cuando hace falta) */
+    transition: background 0.2s; /* Animación suave para el cambio de color al pulsar */
+}
+
+/* Efecto al pasar el dedo o el ratón por encima del botón de duplicar */
+.btn-duplicar:hover {
+    background-color: #1565c0;   /* Se vuelve un azul más claro para avisar del clic */
+}
+
+
+/* =========================================================================
+   ⚙️ CONTROL DE ESTADOS DINÁMICOS (EL SEMÁFORO DE PERMISOS)
+   ========================================================================= */
+
+/* 🛡️ CASO 1: Entrenador de Base viendo Jugada Oficial de la Escuela (SOLO LECTURA)
+   Si el cuerpo tiene las clases 'rol-entrenador' Y 'jugada-oficial' al mismo tiempo: */
+   
+body.rol-entrenador.jugada-oficial .btn-new-play,
+body.rol-entrenador.jugada-oficial #btn-delete-step {
+    display: none !important;    /* 🚫 Escondemos los botones de crear y borrar pasos */
+}
+
+body.rol-entrenador.jugada-oficial .btn-duplicar {
+    display: block !important;   /* 🐑 ¡Hacemos visible el botón de duplicar jugada! */
+}
+
+/* El candado visual de la cancha de baloncesto */
+body.rol-entrenador.jugada-oficial .court-container {
+    pointer-events: none;        /* 🔒 Vitrina de cristal: el dedo pasa de largo, no mueve fichas */
+    opacity: 0.90;               /* La cancha se oscurece un 10% para indicar "Solo Lectura" */
+}
+
+
+/* 👑 CASO 2: Administrador de la Escuela (CONTROL ABSOLUTO)
+   Si el cuerpo tiene la clase de administrador, nunca necesita duplicar: */
+   
+body.rol-admin .btn-duplicar {
+    display: none !important;    /* El administrador edita la oficial directamente, no duplica */
+}
