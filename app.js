@@ -1293,3 +1293,60 @@ document.addEventListener("DOMContentLoaded", () => {
         if (evento.key === "ArrowLeft") irAlPasoAnterior();
     });
 });
+
+// =========================================================================
+// 👑 CONTROL DE ROLES DINÁMICO (SISTEMA DE CONMUTACIÓN DE PRUEBAS)
+// =========================================================================
+
+// ⚠️ NOTA DE ARQUITECTO: Hemos eliminado la línea "let rolActual = ..." de aquí,
+// porque tu tablet ya la tiene declarada en la parte superior de tu archivo.
+// Así el navegador usa tu variable original y evitamos el cortocircuito.
+
+/**
+ * Función encargada de cambiar el rol de la aplicación en tiempo real.
+ * Se activa magnéticamente al hacer clic en los botones de tu barra lateral izquierda.
+ */
+function cambiarRol(nuevoRol) {
+    // PASO 1: Reasignamos el valor en tu variable original (¡sin volver a escribir "let"!)
+    rolActual = nuevoRol;
+
+    // PASO 2: Localizamos el <body> (el maniquí de sastre gigante que viste toda la web)
+    const cuerpoPantalla = document.body;
+
+    // PASO 3: Localizamos tus dos botones físicos del menú lateral de la izquierda
+    const botonEntrenador = document.getElementById('btn-role-coach');
+    const botonAdministrador = document.getElementById('btn-role-admin');
+
+    // PASO 4: Evaluamos el ticket recibido mediante un condicional de bifurcación (If/Else)
+    if (nuevoRol === 'admin') {
+        // 🧥 Vestimos al <body> con el traje de Administrador
+        cuerpoPantalla.classList.add('rol-admin');
+        cuerpoPantalla.classList.remove('rol-entrenador'); // Le quitamos la ropa de coach
+
+        // 💡 Iluminamos tu botón de Admin y apagamos el de Entrenador
+        if (botonAdministrador) botonAdministrador.classList.add('active');
+        if (botonEntrenador) botonEntrenador.classList.remove('active');
+
+        // Mostramos un aviso flotante en la tablet si tu sistema tiene la función Toast
+        if (typeof mostrarToast === 'function') {
+            mostrarToast("👑 Modo Director Deportivo (Admin) Activado");
+        }
+    } else {
+        // 🧥 Vestimos al <body> con el traje de Entrenador de Base
+        cuerpoPantalla.classList.add('rol-entrenador');
+        cuerpoPantalla.classList.remove('rol-admin'); // Le quitamos la ropa de admin
+
+        // 💡 Iluminamos tu botón de Entrenador y apagamos el de Admin
+        if (botonEntrenador) botonEntrenador.classList.add('active');
+        if (botonAdministrador) botonAdministrador.classList.remove('active');
+
+        if (typeof mostrarToast === 'function') {
+            mostrarToast("📋 Modo Entrenador de Base Activado");
+        }
+    }
+
+    // PASO 5: ¡EL SOPLIDO DE SILBATO! Redibujamos la interfaz de la pizarra
+    if (typeof actualizarUI === 'function') {
+        actualizarUI();
+    }
+}
