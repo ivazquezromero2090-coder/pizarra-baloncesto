@@ -433,8 +433,8 @@ body.modo-presentador-activo #barra-presentador {
 }
 
 /* Ocultamos la barra lateral de Supabase para limpiar el banquillo */
-body.modo-presentador-activo #barra-lateral {
-    display: none !important; /* 🚫 Desaparece por completo de la pantalla */
+body.modo-presentador-activo .sidebar {
+    display: none !important; /* 🚫 ¡Ahora sí encontrará el chándal de tu barra lateral y la ocultará! */
 }
 
 /* Ocultamos las herramientas de edición superiores para evitar distracciones */
