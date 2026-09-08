@@ -269,14 +269,41 @@ function aplicarAnimacionTemporal() {
 }
 
 // 7. ROLES Y AUTORIZACIÓN
-function cambiarRol(rol) {
-    rolActual = rol;
-    document.getElementById('btn-role-coach').classList.toggle('active', rol === 'entrenador');
-    document.getElementById('btn-role-admin').classList.toggle('active', rol === 'admin');
-    
-    actualizarUI();
-    cargarBiblioteca(); // Recarga la biblioteca para mostrar/ocultar botones de borrar
-    mostrarToast(`Cambiado al modo: ${rol === 'admin' ? 'Administrador de la Escuela' : 'Entrenador'}`);
+function cambiarRol(nuevoRol) {
+    // PASO 1: Reasignamos el valor en tu variable original
+    rolActual = nuevoRol;
+
+    // PASO 2: Localizamos el body y los botones
+    const cuerpoPantalla = document.body;
+    const botonEntrenador = document.getElementById('btn-role-coach');
+    const botonAdministrador = document.getElementById('btn-role-admin');
+
+    // PASO 3: Cambiamos las clases del body según el rol
+    if (nuevoRol === 'admin') {
+        cuerpoPantalla.classList.add('rol-admin');
+        cuerpoPantalla.classList.remove('rol-entrenador');
+        if (botonAdministrador) botonAdministrador.classList.add('active');
+        if (botonEntrenador) botonEntrenador.classList.remove('active');
+    } else {
+        cuerpoPantalla.classList.add('rol-entrenador');
+        cuerpoPantalla.classList.remove('rol-admin');
+        if (botonEntrenador) botonEntrenador.classList.add('active');
+        if (botonAdministrador) botonAdministrador.classList.remove('active');
+    }
+
+    // =========================================================================
+    // 🔄 RE-RENDERIZADO DE LA BIBLIOTECA (¡LA SOLUCIÓN!)
+    // =========================================================================
+    // Le decimos a la barra lateral que se redibuje por completo. 
+    // Al redibujarse ahora como Admin, ¡aparecerán mágicamente las papeleras de borrar!
+    if (typeof cargarBiblioteca === 'function') {
+        cargarBiblioteca();
+    }
+
+    // Refrescamos el marcador superior
+    if (typeof actualizarUI === 'function') {
+        actualizarUI();
+    }
 }
 
 // 8. GUARDADO DE JUGADAS CON SISTEMA ANTIFALLOS
