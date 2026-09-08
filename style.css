@@ -406,3 +406,77 @@ body {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* ========================================================================= */
+/* 🎨 EL TRAJE VISUAL: ESTILOS DEL MODO PRESENTADOR                         */
+/* ========================================================================= */
+
+/* 1. Por defecto, la barra de presentación está guardada en el vestuario */
+#barra-presentador {
+    display: none; /* 🚪 Escondida por defecto al arrancar el programa */
+    position: fixed; /* 🎈 Flota en la pantalla, ignorando si el usuario hace scroll */
+    bottom: 25px; /* ↕️ Separación de seguridad del borde inferior de la tablet */
+    left: 50%; /* ↔️ La desplazamos a la mitad horizontal de la pantalla */
+    transform: translateX(-50%); /* 🎯 Ajuste fino: la arrastra a la izquierda su propio 50% para centrarla */
+    background-color: rgba(15, 23, 42, 0.95); /* 🌌 Fondo gris oscuro casi negro con 5% de transparencia */
+    padding: 15px 30px; /* 🩹 Colchón interno para que los botones "respiren" */
+    border-radius: 50px; /* 💊 Bordes totalmente redondeados tipo cápsula táctil */
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5); /* 👤 Sombra inferior para darle volumen 3D */
+    z-index: 9999; /* 🥞 Papel de calco superior: asegura que flote por encima de cualquier ficha */
+    align-items: center; /* ⚖️ Centra verticalmente los botones y el texto */
+    gap: 20px; /* 🛑 Distancia de seguridad para evitar pulsaciones erróneas con el dedo */
+}
+
+/* 2. LA REGLA MAESTRA: Qué pasa cuando el cuerpo de la web se viste de gala */
+body.modo-presentador-activo #barra-presentador {
+    display: flex; /* 🔓 ¡La barra se despierta y se vuelve un contenedor elástico! */
+}
+
+/* Ocultamos la barra lateral de Supabase para limpiar el banquillo */
+body.modo-presentador-activo #barra-lateral {
+    display: none !important; /* 🚫 Desaparece por completo de la pantalla */
+}
+
+/* Ocultamos las herramientas de edición superiores para evitar distracciones */
+body.modo-presentador-activo #herramientas-edicion {
+    display: none !important; /* 🚫 Se esconde el panel de guardado y dibujo */
+}
+
+/* Forzamos a que la cancha ocupe el 100% de la pantalla táctil */
+body.modo-presentador-activo #contenedor-cancha {
+    width: 100% !important; /* 📐 La cancha se expande a lo ancho del dispositivo */
+    margin: 0 !important; /* 📐 Eliminamos márgenes sobrantes que desalineen el dibujo */
+}
+
+/* 3. Diseño de botones táctiles gigantes (Pensados para pulgares en pista) */
+.btn-tactil-gigante {
+    background-color: #3b82f6; /* 🔵 Azul deportivo estándar */
+    color: #ffffff; /* ⚪ Texto blanco para máxima lectura bajo el sol */
+    border: none; /* 🧼 Sin bordes toscos de navegador antiguo */
+    padding: 12px 24px; /* 📐 Tamaño generoso para que quepa todo el dedo */
+    font-size: 1rem; /* 👁️ Letra clara y visible a un metro de distancia */
+    font-weight: bold; /* 👁️ Letra gruesa */
+    border-radius: 30px; /* 💊 Bordes redondeados suaves al tacto */
+    cursor: pointer; /* 🖱️ Cambia el cursor a "mano" en ordenadores */
+    transition: background-color 0.2s; /* 🎬 Animación suave de cambio de color al pulsar */
+}
+
+.btn-tactil-gigante:hover {
+    background-color: #2563eb; /* 🔵 Un tono azul más oscuro al pasar por encima */
+}
+
+/* El botón especial de escape de emergencia (Rojo de advertencia) */
+.btn-tactil-gigante.btn-rojo {
+    background-color: #ef4444; /* 🔴 Rojo para llamar la atención del pulgar */
+}
+
+.btn-tactil-gigante.btn-rojo:hover {
+    background-color: #dc2626; /* 🔴 Rojo oscuro al presionarlo */
+}
+
+/* El marcador de texto que indica la página activa */
+.marcador-texto {
+    color: #94a3b8; /* ⚪ Gris claro elegante sobre fondo oscuro */
+    font-weight: bold; /* 👁️ Letra gruesa */
+    font-size: 1.1rem; /* 👁️ Tamaño cómodo de leer para el entrenador */
+}
