@@ -438,7 +438,7 @@ body.modo-presentador-activo .sidebar {
 }
 
 /* Ocultamos las herramientas de edición superiores para evitar distracciones */
-body.modo-presentador-activo #herramientas-edicion {
+body.modo-presentador-activo .control-bar {
     display: none !important; /* 🚫 Se esconde el panel de guardado y dibujo */
 }
 
