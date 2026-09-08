@@ -1281,7 +1281,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btn-presentador-salir").addEventListener("click", alternarModoPresentador);
     document.getElementById("btn-presentador-siguiente").addEventListener("click", irAlPasoSiguiente);
     document.getElementById("btn-presentador-anterior").addEventListener("click", irAlPasoAnterior);
-    
+    document.getElementById("btn-entrar-presentador").addEventListener("click", alternarModoPresentador);
+
     // Enlace de teclado físico opcional para cuando el ordenador esté proyectando en el vestuario
     document.addEventListener("keydown", (evento) => {
         if (!esModoPresentador) return; // Si la bombilla está apagada, ignoramos el teclado
