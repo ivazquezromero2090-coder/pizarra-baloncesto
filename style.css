@@ -137,6 +137,20 @@ body {
     gap: 4px;
 }
 
+/* =========================================================================
+   📢 REGLA GENERAL DE HOVER PARA TODAS LAS LISTAS
+   ========================================================================= */
+
+/* No importa si está en personales o oficiales: al pasar el ratón, ¡se muestra! */
+.play-item:hover .play-item-actions {
+    display: flex !important; /* Forzamos a que aparezca en horizontal */
+}
+
+/* Forzamos a que el icono de la papelera dentro de las acciones sea visible */
+.play-item:hover .action-icon {
+    display: inline-block !important;
+}
+
 .action-icon {
     background: none;
     border: none;
