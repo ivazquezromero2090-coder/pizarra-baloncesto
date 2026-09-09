@@ -607,6 +607,7 @@ async function cargarBiblioteca() {
         } else {
             oficiales.forEach(j => {
                 const activeClass = (jugadaActivaId === j.id) ? 'active' : '';
+                console.log("🔍 Rol leído en la biblioteca:", rolActual);
                 const showActions = (rolActual === 'admin');
                 listSchool.innerHTML += `
                     <div class="play-item ${activeClass}" onclick="cargarJugada('${j.id}', true)">
