@@ -406,25 +406,77 @@ async function guardarJugada() {
 }
 
 // 9. COPIAR JUGADA OFICIAL PARA EDITARLA
-function duplicarJugadaOficial() {
-    if (!esJugadaOficialActiva) return;
+async function duplicarJugadaOficial() {
+    // 1. Verificación de seguridad: solo duplicamos si hay una jugada oficial abierta
+    if (!esJugadaOficialActiva) {
+        if (typeof mostrarToast === 'function') {
+            mostrarToast("⚠️ Abre una jugada oficial para poder duplicarla.");
+        }
+        return;
+    }
 
+    // 2. Confirmación dinámica usando comillas invertidas (Interpolación de Cadenas)
     const confirmar = confirm(`¿Quieres hacer una copia de "${nombreJugadaActiva}" en tus jugadas personales para poder editarla?`);
     if (!confirmar) return;
 
-    const jugadaClonada = {
-        id: Date.now().toString(),
-        nombre: `${nombreJugadaActiva} (Copia)`,
-        pasos: JSON.parse(JSON.stringify(jugadaPasos))
+    // 3. Preparación de la nueva Ficha (Objeto en Memoria)
+    const nuevoId = 'jugada_' + Date.now().toString();
+    const nuevoNombre = `Copia de ${nombreJugadaActiva}`;
+    
+    // Clonación profunda (Deep Copy) para romper la referencia en memoria
+    const pasosClonados = JSON.parse(JSON.stringify(jugadaPasos));
+
+    // Objeto ensamblado con la estructura requerida por Supabase
+    const nuevaJugada = {
+        id: nuevoId,
+        nombre: nuevoNombre,
+        es_oficial: false, // 🔒 Se guarda como personal (no oficial)
+        creador_email: (typeof usuarioEmailActual !== 'undefined' && usuarioEmailActual) 
+                        ? usuarioEmailActual 
+                        : 'entrenador@escuela.com',
+        pasos: pasosClonados
     };
 
-    let listadoPersonales = JSON.parse(localStorage.getItem('jugadas_personales_entrenador')) || [];
-    listadoPersonales.push(jugadaClonada);
-    localStorage.setItem('jugadas_personales_entrenador', JSON.stringify(listadoPersonales));
+    // 4. Intento de guardado asíncrono en la Nube (Supabase)
+    try {
+        if (typeof mostrarToast === 'function') {
+            mostrarToast("⏳ Guardando copia en tu cuenta de la nube...");
+        }
 
-    cargarBiblioteca();
-    cargarJugada(jugadaClonada.id, false);
-    mostrarToast(`📋 Copia creada. ¡Ya puedes editarla libremente!`);
+        // Petición a la base de datos central y ESPERA de confirmación
+        const { data, error } = await supabaseClient
+            .from('jugadas')
+            .insert([nuevaJugada]);
+
+        if (error) throw error; // Si la nube devuelve un fallo, saltamos al catch
+
+        // 5. Refresco y apertura automática tras la confirmación de la nube
+        await cargarBiblioteca(); // Redibuja el menú lateral incorporando el nuevo clon
+        cargarJugada(nuevoId, false); // Abre el duplicado personal en el lienzo
+        
+        if (typeof mostrarToast === 'function') {
+            mostrarToast(`📋 ¡Copia "${nuevoNombre}" creada con éxito en la nube!`);
+        }
+
+    } catch (error) {
+        console.error("⚠️ Error al duplicar en la nube, activando plan B local:", error);
+        
+        // 6. Plan B de Emergencia: Guardado en almacenamiento local (localStorage)
+        let jugadasLocales = JSON.parse(localStorage.getItem('jugadas_locales_baloncesto')) || [];
+        
+        // Asignamos matrícula de emergencia local
+        nuevaJugada.id = 'local_' + Date.now().toString(); 
+        jugadasLocales.push(nuevaJugada);
+        localStorage.setItem('jugadas_locales_baloncesto', JSON.stringify(jugadasLocales));
+
+        // Refrescamos en modo local y abrimos la jugada
+        cargarBibliotecaDesdeLocal();
+        cargarJugada(nuevaJugada.id, false);
+        
+        if (typeof mostrarToast === 'function') {
+            mostrarToast(`⚡ Guardado local de emergencia: "${nuevoNombre}"`);
+        }
+    }
 }
 
 // 10. EDITAR NOMBRE DE JUGADAS
