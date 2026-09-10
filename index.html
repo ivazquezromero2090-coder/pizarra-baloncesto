@@ -235,5 +235,37 @@
         
     </div>
 </div>
+
+<!-- ========================================================================= -->
+<!-- 📂 VENTANA EMERGENTE (MODAL) PARA LA BIBLIOTECA COMPLETA DE JUGADAS        -->
+<!-- ========================================================================= -->
+<div id="overlay-biblioteca" class="modal-overlay" style="display: none;">
+    <div class="modal-contenido-biblioteca">
+        
+        <!-- Cabecera de la ventana flotante -->
+        <div class="modal-header">
+            <h2>📂 Biblioteca Completa de Jugadas</h2>
+            <button class="btn-cerrar-modal" onclick="cerrarBiblioteca()">❌</button>
+        </div>
+        
+        <!-- Cuerpo de la ventana con desplazamiento vertical (Scroll) -->
+        <div class="modal-body-scroll">
+            <section class="seccion-biblioteca">
+                <h3>🏀 Mis Jugadas Privadas (Nube)</h3>
+                <div id="modal-list-personal" class="play-list-container">
+                    <!-- Aquí JavaScript cargará TODAS las jugadas privadas -->
+                </div>
+            </section>
+
+            <section class="seccion-biblioteca" style="margin-top: 15px;">
+                <h3>🏆 Pizarra Oficial de la Escuela</h3>
+                <div id="modal-list-school" class="play-list-container">
+                    <!-- Aquí JavaScript cargará TODAS las jugadas de la escuela -->
+                </div>
+            </section>
+        </div>
+
+    </div>
+</div>
 </body>
 </html>

@@ -663,3 +663,57 @@ body.rol-entrenador.jugada-oficial .court-container {
     margin-bottom: 15px;
     text-align: center;
 }
+
+/* 1. Capa de fondo semitransparente que cubre toda la pantalla */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.75); /* Fondo oscuro transparente */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000; /* Asegura que la ventana flotante quede por encima de la cancha */
+}
+
+/* 2. Caja flotante que contiene el catálogo */
+.modal-contenido-biblioteca {
+    background-color: #1e293b;
+    color: #f8fafc;
+    width: 90%;
+    max-width: 550px;
+    max-height: 80vh;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* 3. Cabecera con título y botón de cierre */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #334155;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+/* 4. Contenedor con barra de desplazamiento vertical (Scroll) */
+.modal-body-scroll {
+    overflow-y: auto; /* 📜 Habilita el desplazamiento si el contenido supera la altura */
+    max-height: 60vh;
+    padding-right: 8px;
+}
+
+/* 5. Botón de cierre manual (❌) */
+.btn-cerrar-modal {
+    background: transparent;
+    border: none;
+    color: #f8fafc;
+    font-size: 1.2rem;
+    cursor: pointer;
+}

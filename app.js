@@ -1205,88 +1205,159 @@ function iniciarNuevaJugada() {
     mostrarToast("¡Pizarra reiniciada! Diseña una nueva estrategia. 🏀");
 }
 
-// =======================================================================
-// ☁️ SISTEMA CLIENTE-SERVIDOR: LA BIBLIOTECA TÁCTICA
-// =======================================================================
-
-/**
- * 1. EL MENSAJERO: Va a Supabase, busca las jugadas y espera la respuesta [1].
- */
-async function abrirBiblioteca() {
-    // Mostramos la ventana de madera en la pantalla
-    document.getElementById('modal-biblioteca').style.display = 'block';
-    
-    try { // 🛡️ Nuestro seguro anti-caídas de WiFi [6]
-        // 🚦 Mandamos al mensajero y pausamos el tiempo (await) [1, 3]
-        const respuesta = await fetch(`${SUPABASE_URL}/rest/v1/jugadas`, { // <─── ¡Concatenamos la ruta oficial completa!
-            method: 'GET',
-            headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`
-            }
-        });
-
-        if (!respuesta.ok) throw new Error("Error en la aduana de Supabase");
-
-        // Convertimos la caja fuerte en un Array de objetos interactivos [4]
-        const listaJugadas = await respuesta.json();
-        
-        // Le pasamos el arreglo fresco a nuestro ayudante para que pinte [8]
-        pintarTablonDeJugadas(listaJugadas);
-        
-    } catch (error) {
-        console.error(error);
-        alert("Sin conexión al pabellón. Revisa tu internet.");
+// =========================================================================
+// 📂 CONTROL DE APERTURA Y CIERRA DEL MODAL EMERGENTE
+// =========================================================================
+function abrirBiblioteca() {
+    const overlay = document.getElementById('overlay-biblioteca');
+    if (overlay) {
+        overlay.style.display = 'flex'; // Despliega la ventana flotante en pantalla
+        cargarBiblioteca();            // Consulta y refresca los datos actualizados
     }
 }
 
-/**
- * 2. EL AYUDANTE (BUCLE): Limpia el corcho y cuelga los folios nuevos [11, 12].
- */
-function pintarTablonDeJugadas(jugadas) {
-    const columnaOficiales = document.getElementById('lista-oficiales');
-    const columnaPersonales = document.getElementById('lista-personales');
-
-    // 🧹 PASO CLAVE: Vaciamos el tablón visual para evitar duplicados infinitos
-    columnaOficiales.innerHTML = '';
-    columnaPersonales.innerHTML = '';
-
-    // 🔄 Iteramos la caja de jugadas una por una [12]
-    jugadas.forEach(jugada => {
-        
-        // Fabricamos la tarjeta visual usando "Plantillas Literales" (Backticks)
-        // El operador ternario (?) decide si pinta el botón de borrar [13, 14]
-        const tarjetaHTML = `
-            <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 5px;">
-                <h4 style="margin: 0 0 10px 0;">🏀 ${jugada.nombre}</h4>
-                <button onclick="cargarJugadaEnCancha('${jugada.id}')">👁️ Abrir</button>
-                
-                ${jugada.es_oficial === false ? 
-                    `<button style="background: red; color: white;" onclick="borrarJugada('${jugada.id}')">🗑️ Borrar</button>` 
-                    : ''}
-            </div>
-        `;
-
-        // 🗂️ A la aduana: ¿Es de la escuela o es personal?
-        if (jugada.es_oficial === true) {
-            columnaOficiales.innerHTML += tarjetaHTML;
-        } else if (jugada.creador_email === MI_EMAIL) {
-            columnaPersonales.innerHTML += tarjetaHTML;
-        }
-    });
-
-    // Estado vacío si no hay jugadas [15]
-    if(columnaOficiales.innerHTML === '') columnaOficiales.innerHTML = '<i>No hay jugadas oficiales.</i>';
-    if(columnaPersonales.innerHTML === '') columnaPersonales.innerHTML = '<i>Empieza a crear tus propias estrategias.</i>';
-}
-
 function cerrarBiblioteca() {
-    document.getElementById('modal-biblioteca').style.display = 'none';
+    const overlay = document.getElementById('overlay-biblioteca');
+    if (overlay) {
+        overlay.style.display = 'none'; // Oculta la ventana flotante
+    }
 }
 
-// ⚠️ Mocks vacíos para que los botones no den error al pulsarlos hoy
-function cargarJugadaEnCancha(id) { alert("¡Pronto cargaremos la jugada " + id + " en el parqué!"); }
-function borrarJugada(id) { alert("¡Pronto borraremos la jugada " + id + " de la nube!"); }
+// Auxiliar: Carga la jugada seleccionada en la cancha y cierra el modal
+function seleccionarYBuscar(id, esOficial) {
+    cargarJugada(id, esOficial);
+    cerrarBiblioteca(); // 🔒 Cierre automático del ventanal al elegir
+}
+
+// =========================================================================
+// 📚 CARGA Y DISTRIBUCIÓN DE JUGADAS (MÁXIMO 4 EN PANTALLA / TODAS EN MODAL)
+// =========================================================================
+async function cargarBiblioteca() {
+    actualizarMenuSegunRol(); 
+    
+    try {
+        // 1. Petición general a la nube de Supabase
+        const { data: listadoJugadas, error } = await supabaseClient
+            .from('jugadas')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        modoLocalDeEmergencia = false;
+
+        // 2. Filtro de privacidad por autor usando el Operador Lógico Y (&&)
+        const privadasTodas = listadoJugadas.filter(j => 
+            j.es_oficial === false && j.creador_email === usuarioEmailActual
+        );
+
+        const oficialesTodas = listadoJugadas.filter(j => j.es_oficial === true);
+
+        // 🎯 3. RECORTE DE LISTAS: Seleccionar únicamente los primeros 4 elementos
+        const privadasRecientes = privadasTodas.slice(0, 4);
+        const oficialesRecientes = oficialesTodas.slice(0, 4);
+
+        // -----------------------------------------------------------------
+        // A) PINTAR BARRA LATERAL PRINCIPAL (MÁXIMO 4 RECIENTES)
+        // -----------------------------------------------------------------
+        const listPersonal = document.getElementById('list-personal');
+        const listSchool = document.getElementById('list-school');
+
+        if (listPersonal) {
+            listPersonal.innerHTML = "";
+            if (privadasRecientes.length === 0) {
+                listPersonal.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; padding: 5px;">Sin jugadas recientes.</div>';
+            } else {
+                privadasRecientes.forEach(j => {
+                    const activeClass = (jugadaActivaId === j.id) ? 'active' : '';
+                    listPersonal.innerHTML += `
+                        <div class="play-item ${activeClass}" onclick="cargarJugada('${j.id}', false)">
+                            <div>
+                                <span>🏀 ${j.nombre}</span>
+                                <div style="font-size: 0.7rem; color: #94a3b8;">Por: ${j.creador_email}</div>
+                            </div>
+                            <div class="play-item-actions">
+                                <button class="action-icon" title="Borrar" onclick="borrarJugada(event, '${j.id}', false)">🗑️</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        if (listSchool) {
+            listSchool.innerHTML = "";
+            if (oficialesRecientes.length === 0) {
+                listSchool.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; padding: 5px;">Sin jugadas oficiales.</div>';
+            } else {
+                oficialesRecientes.forEach(j => {
+                    const activeClass = (jugadaActivaId === j.id) ? 'active' : '';
+                    const showActions = (rolActual === 'admin');
+                    listSchool.innerHTML += `
+                        <div class="play-item ${activeClass}" onclick="cargarJugada('${j.id}', true)">
+                            <div>
+                                <span>🏆 ${j.nombre}</span>
+                                <div style="font-size: 0.7rem; color: #94a3b8;">Oficial Escuela</div>
+                            </div>
+                            ${showActions ? `
+                                <div class="play-item-actions">
+                                    <button class="action-icon" title="Borrar" onclick="borrarJugada(event, '${j.id}', true)">🗑️</button>
+                                </div>
+                            ` : '<div></div>'}
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // B) PINTAR VENTANA EMERGENTE (BIBLIOTECA COMPLETA CON SCROLL)
+        // -----------------------------------------------------------------
+        const modalListPersonal = document.getElementById('modal-list-personal');
+        const modalListSchool = document.getElementById('modal-list-school');
+
+        if (modalListPersonal) {
+            modalListPersonal.innerHTML = "";
+            if (privadasTodas.length === 0) {
+                modalListPersonal.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; padding: 5px;">No tienes jugadas privadas guardadas.</div>';
+            } else {
+                privadasTodas.forEach(j => {
+                    modalListPersonal.innerHTML += `
+                        <div class="play-item" onclick="seleccionarYBuscar('${j.id}', false)">
+                            <div>
+                                <span>🏀 ${j.nombre}</span>
+                                <div style="font-size: 0.7rem; color: #94a3b8;">Por: ${j.creador_email}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        if (modalListSchool) {
+            modalListSchool.innerHTML = "";
+            if (oficialesTodas.length === 0) {
+                modalListSchool.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; padding: 5px;">No hay jugadas oficiales en la escuela.</div>';
+            } else {
+                oficialesTodas.forEach(j => {
+                    modalListSchool.innerHTML += `
+                        <div class="play-item" onclick="seleccionarYBuscar('${j.id}', true)">
+                            <div>
+                                <span>🏆 ${j.nombre}</span>
+                                <div style="font-size: 0.7rem; color: #94a3b8;">Oficial Escuela</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+    } catch (error) {
+        console.warn("⚠️ Supabase no disponible. Modo Local activo:", error);
+        modoLocalDeEmergencia = true;
+        cargarBibliotecaDesdeLocal();
+    }
+}
 
 // =========================================================================
 // 🧠 CEREBRO DEL MODO PRESENTADOR (VERSIÓN ACOPLADA AL MOTOR ORIGINAL)
