@@ -616,8 +616,11 @@ async function cargarJugada(id, esOficial) {
 
 // 13. ACTUALIZAR PANEL DE BIBLIOTECA (CON AUTO-RESCATE LOCAL)
 async function cargarBiblioteca() {
+    // Ejecutamos primero la ocultación o muestra del botón Administrador
+    actualizarMenuSegunRol(); 
+    
     try {
-        // Intentamos ir por la vía rápida y oficial (Nube)
+        // Consultamos el catálogo general a la nube de Supabase
         const { data: listadoJugadas, error } = await supabaseClient
             .from('jugadas')
             .select('*')
@@ -625,16 +628,21 @@ async function cargarBiblioteca() {
 
         if (error) throw error;
 
-        // Si funciona, desactivamos el modo de emergencia por si estaba encendido
         modoLocalDeEmergencia = false;
 
-        const personales = listadoJugadas.filter(j => j.es_oficial === false);
+        // 🎯 [AJUSTE 1: LA DOBLE CONDICIÓN DE PRIVACIDAD]
+        // Se exige que NO sea oficial Y ADEMÁS que el creador sea el usuario en sesión
+        const personales = listadoJugadas.filter(j => 
+            j.es_oficial === false && j.creador_email === usuarioEmailActual
+        );
+
+        // Las jugadas oficiales de la escuela se mantienen públicas para todos
         const oficiales = listadoJugadas.filter(j => j.es_oficial === true);
 
-        // Pintar Personales (Nube)
+        // --- PINTAR COLUMNA "MIS JUGADAS" (NUBE) ---
         listPersonal.innerHTML = "";
         if (personales.length === 0) {
-            listPersonal.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; padding: 5px;">Ninguna jugada en la nube.</div>';
+            listPersonal.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; padding: 5px;">Ninguna jugada privada en la nube.</div>';
         } else {
             personales.forEach(j => {
                 const activeClass = (jugadaActivaId === j.id) ? 'active' : '';
@@ -652,7 +660,7 @@ async function cargarBiblioteca() {
             });
         }
 
-        // Pintar Oficiales (Nube)
+        // --- PINTAR COLUMNA "ESCUELA" (NUBE) ---
         listSchool.innerHTML = "";
         if (oficiales.length === 0) {
             listSchool.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; padding: 5px;">Ninguna jugada oficial.</div>';
@@ -660,7 +668,10 @@ async function cargarBiblioteca() {
             oficiales.forEach(j => {
                 const activeClass = (jugadaActivaId === j.id) ? 'active' : '';
                 console.log("🔍 Rol leído en la biblioteca:", rolActual);
+                
+                // Las papeleras de borrado en la escuela SOLO se muestran al Admin
                 const showActions = (rolActual === 'admin');
+                
                 listSchool.innerHTML += `
                     <div class="play-item ${activeClass}" onclick="cargarJugada('${j.id}', true)">
                         <div>
@@ -680,7 +691,6 @@ async function cargarBiblioteca() {
     } catch (error) {
         console.warn("⚠️ Supabase no disponible. Activando Modo Local de Emergencia:", error);
         modoLocalDeEmergencia = true;
-        // Cargamos los datos guardados en el dispositivo
         cargarBibliotecaDesdeLocal();
     }
 }
@@ -1378,3 +1388,149 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
+// =========================================================================
+// 🔑 LÓGICA DE AUTENTICACIÓN E INICIO DE SESIÓN (app.js)
+// =========================================================================
+
+async function procesarLogin(event) {
+    // 1. Freno de mano: Evita que el navegador recargue la página al pulsar "Entrar"
+    event.preventDefault();
+
+    // 2. Localización de los elementos del DOM (Pantalla)
+    const inputEmail = document.getElementById('login-email');
+    const inputPassword = document.getElementById('login-password');
+    const errorMsg = document.getElementById('login-error-msg');
+    const overlay = document.getElementById('login-overlay');
+
+    // 3. Extracción y limpieza del texto escrito por el entrenador
+    const email = inputEmail ? inputEmail.value.trim() : '';
+    const password = inputPassword ? inputPassword.value : '';
+
+    // Limpiamos mensajes de error antiguos de la pantalla
+    if (errorMsg) {
+        errorMsg.style.display = 'none';
+        errorMsg.textContent = '';
+    }
+
+    // 4. Validación de campos vacíos antes de molestar al servidor
+    if (!email || !password) {
+        if (errorMsg) {
+            errorMsg.textContent = "⚠️ Por favor, introduce tu correo y contraseña.";
+            errorMsg.style.display = 'block';
+        }
+        return; // Detenemos la ejecución si falta algún dato
+    }
+
+    try {
+        // Aviso visual temporal mientras viajan los datos por la red
+        if (typeof mostrarToast === 'function') {
+            mostrarToast("⏳ Validando credenciales con el club...");
+        }
+
+        // 5. Petición asíncrona a la base de datos de Supabase Auth
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+        // Si la nube responde con rechazo, saltamos inmediatamente al bloque catch
+        if (error) throw error;
+
+        // 6. ¡ACCESO CONCEDIDO!
+        // Guardamos el correo en nuestra variable global de sesión viva
+        usuarioEmailActual = (data && data.user) ? data.user.email : email;
+
+        actualizarMenuSegunRol();
+
+        // Ocultamos la tarjeta modal flotante liberando el lienzo de la cancha
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+
+        // Damos la bienvenida personalizada mediante una alerta flotante
+        if (typeof mostrarToast === 'function') {
+            mostrarToast(`👋 ¡Bienvenido/a, ${usuarioEmailActual}!`);
+        }
+
+        // 7. Redibujamos la biblioteca lateral con las jugadas exclusivas del usuario
+        if (typeof cargarBiblioteca === 'function') {
+            await cargarBiblioteca();
+        }
+
+    } catch (error) {
+        console.error("❌ Error en el inicio de sesión:", error.message);
+        
+        // 8. Visualización de mensaje de error en la tarjeta modal
+        if (errorMsg) {
+            errorMsg.textContent = "❌ Correo o contraseña incorrectos.";
+            errorMsg.style.display = 'block';
+        }
+    }
+}
+
+// =========================================================================
+// 🔒 FUNCIÓN DE CONTROL DE VISIBILIDAD DE MENÚ SEGÚN EL ROL DE USUARIO
+// =========================================================================
+function actualizarMenuSegunRol() {
+    // Localizamos en la pantalla el botón con el ID exacto de tu index.html
+    const btnAdmin = document.getElementById('btn-role-admin'); 
+
+    // Si el botón no existe en el DOM, detenemos la función de forma segura
+    if (!btnAdmin) return;
+
+    // Evaluamos si el correo activo pertenece al Director Deportivo
+    if (typeof usuarioEmailActual !== 'undefined' && usuarioEmailActual === 'admin@pizarra.com') {
+        btnAdmin.style.display = 'flex'; // Hacemos visible el botón
+        rolActual = 'admin';             // Asignamos rol de Administrador
+    } else {
+        btnAdmin.style.display = 'none'; // Ocultamos el botón por completo
+        rolActual = 'entrenador';        // Asignamos rol de Entrenador
+    }
+}
+
+// =========================================================================
+// 🚪 FUNCIÓN DE CIERRE DE SESIÓN Y LIMPIEZA DE MEMORIA (app.js)
+// =========================================================================
+async function cerrarSesion() {
+    try {
+        // 1. Notificamos al servidor de Supabase que anulamos el permiso activo
+        if (typeof supabaseClient !== 'undefined' && supabaseClient.auth) {
+            await supabaseClient.auth.signOut();
+        }
+
+        // 2. Destrucción de Variables de Memoria Globales (Reset)
+        usuarioEmailActual = "";
+        rolActual = "entrenador";
+
+        // 3. Reevaluamos el menú para ocultar el botón de Administrador
+        if (typeof actualizarMenuSegunRol === 'function') {
+            actualizarMenuSegunRol();
+        }
+
+        // 4. Limpieza visual de la columna "Mis Jugadas"
+        const listPersonal = document.getElementById('list-personal');
+        if (listPersonal) {
+            listPersonal.innerHTML = '<div style="color: #64748b; font-size: 0.8rem; padding: 5px;">Inicia sesión para ver tus jugadas.</div>';
+        }
+
+        // 5. Limpiamos los campos de texto del formulario flotante
+        const inputEmail = document.getElementById('login-email');
+        const inputPassword = document.getElementById('login-password');
+        if (inputEmail) inputEmail.value = '';
+        if (inputPassword) inputPassword.value = '';
+
+        // 6. Volvemos a desplegar la tarjeta modal flotante de inicio de sesión
+        const overlay = document.getElementById('login-overlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+        }
+
+        // 7. Notificación visual de confirmación
+        if (typeof mostrarToast === 'function') {
+            mostrarToast("👋 Sesión cerrada correctamente. ¡Hasta pronto!");
+        }
+
+    } catch (error) {
+        console.error("❌ Error al cerrar sesión:", error.message);
+    }
+}

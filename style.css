@@ -574,3 +574,92 @@ body.rol-entrenador.jugada-oficial .court-container {
     pointer-events: none; /* Vitrina de cristal: se ve pero no se puede tocar */
     opacity: 0.90;        /* Se atenúa ligeramente para indicar lectura */
 }
+
+/* =========================================================================
+   🖤 1. EL FONDO OSCURECIDO (CORTINA QUE BLOQUEA LA CANCHA)
+   ========================================================================= */
+.login-overlay {
+    position: fixed; /* Mantiene la capa fija en pantalla completa */
+    top: 0;
+    left: 0;
+    width: 100vw; /* Cubre el 100% del ancho de la pantalla */
+    height: 100vh; /* Cubre el 100% del alto de la pantalla */
+    background-color: rgba(15, 23, 42, 0.85); /* Fondo oscuro transparente */
+    backdrop-filter: blur(4px); /* Difumina ligeramente la cancha por detrás */
+    display: flex; /* Flexbox para centrado perfecto */
+    justify-content: center; /* Centrado horizontal */
+    align-items: center; /* Centrado vertical */
+    z-index: 9999; /* Se sitúa por encima de todos los demás elementos */
+}
+
+/* =========================================================================
+   🎴 2. LA TARJETA MODAL (MESA DE CONTROL CENTRADA)
+   ========================================================================= */
+.login-card {
+    background-color: #1e293b; /* Tono azul oscuro profesional */
+    color: #f8fafc; /* Texto claro legible */
+    padding: 30px;
+    border-radius: 12px; /* Esquinas redondeadas estilo tablet moderna */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); /* Sombra elegante */
+    width: 90%;
+    max-width: 400px; /* Ancho máximo adaptado a móviles y tablets */
+    border: 1px solid #334155;
+}
+
+/* =========================================================================
+   ✏️ 3. GRUPOS DE FORMULARIO Y CAMPOS DE TEXTO (INPUTS)
+   ========================================================================= */
+.form-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-size: 0.85rem;
+    margin-bottom: 6px;
+    color: #94a3b8;
+}
+
+.form-group input {
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #475569;
+    background-color: #0f172a;
+    color: #ffffff;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+/* Resaltado azul al hacer clic dentro del campo (Focus) */
+.form-group input:focus {
+    border-color: #38bdf8;
+}
+
+/* =========================================================================
+   🔘 4. BOTÓN DE ENVÍO Y MENSAJES DE ERROR
+   ========================================================================= */
+.btn-primary-login {
+    width: 100%;
+    padding: 12px;
+    background-color: #0284c7;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-primary-login:hover {
+    background-color: #0369a1; /* Oscurece al pasar el ratón */
+}
+
+.error-message {
+    color: #ef4444;
+    font-size: 0.85rem;
+    margin-bottom: 15px;
+    text-align: center;
+}

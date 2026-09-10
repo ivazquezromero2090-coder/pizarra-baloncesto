@@ -27,9 +27,14 @@
             <span>➕ Nueva Jugada</span>
         </button>
 
-        <!-- 📂 NUEVO: BOTÓN FÍSICO PARA ABRIR LA BIBLIOTECA EN LA NUBE -->
+        <!-- 📂 BOTÓN FÍSICO PARA ABRIR LA BIBLIOTECA EN LA NUBE -->
         <button class="btn-new-play" onclick="abrirBiblioteca()" style="margin-top: 10px; background-color: #2e7d32; border-color: #1b5e20;">
             <span>📂 Abrir Biblioteca</span>
+        </button>
+
+        <!-- 🚪 BOTÓN TÁCTIL PARA CERRAR SESIÓN (MISMA ESTRUCTURA Y TONO ROJIZO DE ADVERTENCIA) -->
+        <button id="btn-logout" class="btn-new-play" onclick="cerrarSesion()" style="margin-top: 10px; background-color: #c62828; border-color: #8e0000;">
+            <span>🚪 Cerrar Sesión</span>
         </button>
 
         <!-- Secciones de la Biblioteca Lateral (Se quedan como archivo alternativo) -->
@@ -180,6 +185,55 @@
         ▶️ Siguiente
     </button>
     
+</div>
+
+<!-- 🧥 CAPA SUPERPUESTA (OVERLAY) Y TARJETA FLOTANTE DE ACCESO -->
+<div id="login-overlay" class="login-overlay">
+    
+    <!-- 🎴 LA TARJETA MODAL DE LOGIN (MESA DE CONTROL) -->
+    <div class="login-card">
+        
+        <!-- 🏀 ENCABEZADO Y TÍTULO DE LA APLICACIÓN -->
+        <div class="login-header">
+            <h2>🏀 Pizarra Táctica</h2>
+            <p>Introduce tus credenciales para acceder a tus jugadas</p>
+        </div>
+
+        <!-- 📝 FORMULARIO DE CAPTURA DE DATOS DESDE TECLADO -->
+        <form id="login-form" onsubmit="procesarLogin(event)">
+            
+            <!-- 📧 CAMPO 1: CORREO ELECTRÓNICO -->
+            <div class="form-group">
+                <label for="login-email">Correo Electrónico:</label>
+                <input 
+                    type="email" 
+                    id="login-email" 
+                    placeholder="entrenador@escuela.com" 
+                    required 
+                />
+            </div>
+
+            <!-- 🔑 CAMPO 2: CONTRASEÑA ENCRIPTADA VISUALMENTE -->
+            <div class="form-group">
+                <label for="login-password">Contraseña:</label>
+                <input 
+                    type="password" 
+                    id="login-password" 
+                    placeholder="••••••••" 
+                    required 
+                />
+            </div>
+
+            <!-- 🚨 CONTENEDOR PARA MENSAJES DE ERROR DE VALIDACIÓN -->
+            <div id="login-error-msg" class="error-message" style="display: none;"></div>
+
+            <!-- 🚀 BOTÓN DE ENVIAR CREDENCIALES -->
+            <button type="submit" id="btn-submit-login" class="btn-primary-login">
+                Iniciar Sesión
+            </button>
+        </form>
+        
+    </div>
 </div>
 </body>
 </html>
